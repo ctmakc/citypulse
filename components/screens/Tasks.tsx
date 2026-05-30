@@ -80,7 +80,7 @@ export default function Tasks() {
   const backlogCount = TASKS.filter((t) => t.status === "New").length
 
   const WEEKS = 8
-  const weekLabels = Array.from({ length: WEEKS }, (_, i) => `Wk ${i + 1}`)
+  const weekLabels = ["Jun 1", "Jun 8", "Jun 15", "Jun 22", "Jun 29", "Jul 6", "Jul 13", "Jul 20"]
 
   // Calendar grid: 5 rows of 7 days
   const calCells: (number | null)[] = [
@@ -183,14 +183,9 @@ export default function Tasks() {
                 alignItems: "center",
               }}
             >
-              <div style={{ padding: "0 8px" }}>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: PRI_COLOR[task.pri] ?? "var(--ink)",
-                  }}
-                >
+              <div style={{ padding: "0 8px", display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 7, height: 7, borderRadius: 2, background: PRI_COLOR[task.pri] ?? "var(--ink)", flexShrink: 0 }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: PRI_COLOR[task.pri] ?? "var(--ink)" }}>
                   {task.pri}
                 </span>
               </div>
@@ -335,15 +330,9 @@ export default function Tasks() {
               minWidth: 700,
             }}
           >
-            <div className="cap" style={{ padding: "10px 18px" }}>
-              Task
-            </div>
+            <div className="cap" style={{ padding: "10px 18px" }}>Work order</div>
             {weekLabels.map((w) => (
-              <div
-                key={w}
-                className="cap"
-                style={{ padding: "10px 4px", textAlign: "center", borderLeft: "1px solid var(--rule-soft)" }}
-              >
+              <div key={w} className="code" style={{ padding: "10px 4px", textAlign: "center", borderLeft: "1px solid var(--rule-soft)", fontSize: 8.5 }}>
                 {w}
               </div>
             ))}
@@ -359,28 +348,20 @@ export default function Tasks() {
                 minWidth: 700,
               }}
             >
-              <div style={{ padding: "10px 18px" }}>
-                <div style={{ fontSize: 12.5, fontWeight: 500, color: "var(--ink)" }}>{task.title}</div>
-                <div style={{ fontSize: 10.5, color: "var(--ink-faint)", marginTop: 1 }}>{task.assignee}</div>
+              <div style={{ padding: "9px 18px" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 500, color: "var(--ink)", lineHeight: 1.35 }}>{task.title}</div>
+                <div className="code" style={{ fontSize: 8.5, marginTop: 2 }}>{task.id} · {task.dept}</div>
               </div>
               {weekLabels.map((_, wi) => (
-                <div
-                  key={wi}
-                  style={{
-                    padding: "10px 4px",
-                    borderLeft: "1px solid var(--rule-soft)",
-                  }}
-                >
+                <div key={wi} style={{ padding: "9px 4px", borderLeft: "1px solid var(--rule-soft)" }}>
                   {task.gs <= wi && wi < task.gs + task.gl && (
-                    <div
-                      style={{
-                        height: 18,
-                        borderRadius: 4,
-                        background: PRI_COLOR[task.pri] ?? "var(--blue)",
-                        opacity: 0.75,
-                        width: "100%",
-                      }}
-                    />
+                    <div style={{
+                      height: 20, borderRadius: 4, background: PRI_COLOR[task.pri] ?? "var(--blue)",
+                      display: "flex", alignItems: "center", paddingLeft: 7,
+                      color: "#fff", fontSize: 9.5, fontWeight: 600, overflow: "hidden",
+                    }}>
+                      {wi === task.gs ? task.status : ""}
+                    </div>
                   )}
                 </div>
               ))}

@@ -14,6 +14,7 @@ interface SituationBandProps {
   gaugeColor: string
   eyebrow: string
   headline: string
+  body?: string
   readouts: [string, string, string?, string?][]
   chart: ReactNode
 }
@@ -24,6 +25,7 @@ export function SituationBand({
   gaugeColor,
   eyebrow,
   headline,
+  body,
   readouts,
   chart,
 }: SituationBandProps) {
@@ -71,6 +73,9 @@ export function SituationBand({
           >
             {headline}
           </div>
+          {body && (
+            <p style={{ margin: '8px 0 0', fontSize: 12.5, color: 'var(--ink-soft)', lineHeight: 1.55 }}>{body}</p>
+          )}
         </div>
         <Readouts items={readouts} cols={2} />
       </div>

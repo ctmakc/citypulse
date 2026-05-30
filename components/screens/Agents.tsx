@@ -2,110 +2,80 @@
 
 import Screen from "@/components/ui/Screen"
 import ScreenHead from "@/components/ui/ScreenHead"
-import Card from "@/components/ui/Card"
 import Pill from "@/components/ui/Pill"
 import Donut from "@/components/ui/Donut"
-import Icon from "@/components/ui/Icon"
+import Icon, { ICONS } from "@/components/ui/Icon"
 import { AGENTS, BRIEFING } from "@/lib/data"
 import { usePortalStore } from "@/lib/store"
+import { SEV_COLOR } from "@/components/ui/Pill"
 import type { Agent } from "@/lib/types"
 
 function AgentCard({ agent }: { agent: Agent }) {
-  const setDetail = usePortalStore((s) => s.setDetail)
+  const setDetail = usePortalStore(s => s.setDetail)
 
   return (
     <div
       className="surface lift"
-      style={{ display: "flex", flexDirection: "column", gap: 0, overflow: "hidden" }}
+      style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
+      onClick={() => setDetail({ type: "agent", data: agent })}
     >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "14px 16px 12px",
-          borderBottom: "1px solid var(--rule-soft)",
-        }}
-      >
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: "var(--r-sm)",
-            background: `color-mix(in srgb, ${agent.color} 15%, transparent)`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: agent.color,
-            flexShrink: 0,
-          }}
-        >
-          <Icon name={agent.ico} size={17} strokeWidth={1.7} />
+      {/* Header row */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "14px 16px 12px", borderBottom: "1px solid var(--rule-soft)",
+        cursor: "pointer",
+      }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: "var(--r-sm)",
+          background: "var(--surface-2)", border: "1px solid var(--rule)",
+          display: "grid", placeItems: "center",
+          color: agent.color, flexShrink: 0,
+        }}>
+          <Icon name={agent.ico} size={18} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)", lineHeight: 1.2 }}>
-            {agent.name}
-          </div>
-          <div className="code" style={{ marginTop: 2 }}>{agent.dept}</div>
+          <div style={{ fontWeight: 700, fontSize: 13.5 }}>{agent.name}</div>
+          <div className="code" style={{ fontSize: 9, marginTop: 2 }}>{agent.dept}</div>
         </div>
         <Pill sev={agent.esc}>{agent.status}</Pill>
-        <button
-          onClick={() => setDetail({ type: "agent", data: agent })}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--ink-faint)",
-            padding: 4,
-            display: "flex",
-          }}
-        >
-          <Icon name="chevron" size={14} style={{ transform: "rotate(-90deg)" }} />
-        </button>
+        <span style={{ color: "var(--ink-faint)" }}><Icon name="chevron" size={15} style={{ transform: "rotate(-90deg)" }} /></span>
       </div>
 
       {/* Body */}
-      <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+      <div style={{ padding: "13px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
         <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>
           {agent.finding}
         </p>
 
         {/* Source tags */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-          {agent.sources.map((src) => (
-            <span
-              key={src}
-              style={{
-                fontSize: 10.5,
-                fontWeight: 500,
-                padding: "2px 8px",
-                borderRadius: 100,
-                background: "var(--surface-3)",
-                color: "var(--ink-faint)",
-                border: "1px solid var(--rule-soft)",
-              }}
-            >
-              {src}
-            </span>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {agent.sources.map(s => (
+            <span key={s} style={{
+              fontSize: 10.5, padding: "2px 8px", borderRadius: 100,
+              background: "var(--surface-2)", border: "1px solid var(--rule)", color: "var(--ink-faint)",
+            }}>{s}</span>
           ))}
         </div>
 
-        {/* Confidence + actions */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Donut v={agent.conf} size={38} color={agent.color} />
-          <div>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink)" }}>
-              {Math.round(agent.conf * 100)}% confidence
-            </div>
-            <div style={{ fontSize: 11, color: "var(--ink-faint)" }}>
-              Escalation: {agent.esc}
+        {/* Confidence + escalation + actions */}
+        <div style={{ paddingTop: 12, borderTop: "1px solid var(--rule-soft)", display: "flex", alignItems: "center", gap: 12 }}>
+          <Donut v={agent.conf} size={40} color={agent.color} />
+          <div style={{ flex: 1 }}>
+            <div className="cap" style={{ fontSize: 9 }}>Confidence · Escalation</div>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: SEV_COLOR[agent.esc] ?? "var(--ink)", marginTop: 2 }}>
+              {Math.round(agent.conf * 100)}% · {agent.esc}
             </div>
           </div>
-          <div style={{ flex: 1 }} />
-          {agent.actions.slice(0, 1).map((act) => (
-            <button key={act} className="btn btn-quiet" style={{ fontSize: 11.5 }}>
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+          {agent.actions.map((act, i) => (
+            <button key={i} className="btn btn-ghost" style={{
+              justifyContent: "space-between", width: "100%", fontSize: 12,
+            }}>
               {act}
+              <Icon name="chevron" size={13} style={{ transform: "rotate(-90deg)" }} />
             </button>
           ))}
         </div>
@@ -120,7 +90,7 @@ export default function Agents() {
       <ScreenHead
         ico="ai"
         title="AI Agents"
-        sub="Specialized agents monitor every domain continuously — water, fire, traffic, flood, air quality, citizen reports and grants. Each surfaces findings, confidence and recommended actions."
+        sub="Specialized agents monitor each domain continuously, explain what they find, and propose actions for the responsible department to approve."
         color="var(--blue)"
         actions={
           <button className="btn btn-ghost" style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -130,107 +100,106 @@ export default function Agents() {
         }
       />
 
-      {/* Morning Briefing */}
-      <Card title="Morning Briefing" code="AI">
+      {/* Morning Briefing panel — 4 columns, matching design */}
+      <div className="surface" style={{ overflow: "hidden" }}>
+        {/* Header */}
+        <div style={{
+          padding: "16px 20px", borderBottom: "1px solid var(--rule)",
+          display: "flex", alignItems: "center", gap: 12,
+          background: "var(--surface-2)",
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: "var(--blue-wash)", color: "var(--blue)",
+            display: "grid", placeItems: "center",
+          }}>
+            <Icon name="sparkles" size={19} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div className="serif" style={{ fontSize: 18, fontWeight: 600 }}>Morning briefing</div>
+            <div className="code" style={{ fontSize: 9.5, marginTop: 2 }}>
+              Generated 07:40 · 9 agents · 2,140 sensor nodes
+            </div>
+          </div>
+          <button className="btn btn-ghost" style={{ fontSize: 12, gap: 6, display: "flex", alignItems: "center" }}>
+            <Icon name="exports" size={14} />
+            Send to council
+          </button>
+        </div>
+
+        {/* 4-column grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
-          {/* Top Risks */}
-          <div style={{ padding: "0 16px 0 0", borderRight: "1px solid var(--rule-soft)" }}>
-            <div className="cap" style={{ marginBottom: 8 }}>Top risks</div>
-            {BRIEFING.topRisks.map(([risk, where, sev]) => (
-              <div
-                key={risk}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 7,
-                  padding: "5px 0",
-                  borderBottom: "1px solid var(--rule-soft)",
-                }}
-              >
-                <div
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: sev === "Critical" ? "var(--red)" : "var(--amber)",
-                    flexShrink: 0,
-                    marginTop: 4,
-                  }}
-                />
+
+          {/* 1. Top risks */}
+          <div style={{ padding: "16px 18px", borderRight: "1px solid var(--rule)" }}>
+            <div className="cap" style={{ fontSize: 9.5, marginBottom: 11 }}>Top risks today</div>
+            {BRIEFING.topRisks.map(([risk, where, sev], i) => (
+              <div key={i} style={{ display: "flex", gap: 8, alignItems: "baseline", marginBottom: 9 }}>
+                <span className="mono" style={{ fontSize: 10, color: "var(--ink-faint)", flexShrink: 0 }}>{i + 1}</span>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 500, color: "var(--ink)", lineHeight: 1.4 }}>{risk}</div>
-                  <div style={{ fontSize: 10.5, color: "var(--ink-faint)" }}>{where}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 500, lineHeight: 1.3 }}>{risk}</div>
+                  <div style={{ fontSize: 10.5, color: SEV_COLOR[sev] ?? "var(--slate)", marginTop: 1 }}>
+                    {where} · {sev}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Overnight */}
-          <div style={{ padding: "0 16px", borderRight: "1px solid var(--rule-soft)" }}>
-            <div className="cap" style={{ marginBottom: 8 }}>Overnight changes</div>
-            {BRIEFING.overnight.map((item) => (
-              <div
-                key={item}
-                style={{
-                  fontSize: 12,
-                  color: "var(--ink-soft)",
-                  padding: "5px 0",
-                  borderBottom: "1px solid var(--rule-soft)",
-                  lineHeight: 1.45,
-                }}
-              >
-                {item}
+          {/* 2. Overnight changes */}
+          <div style={{ padding: "16px 18px", borderRight: "1px solid var(--rule)" }}>
+            <div className="cap" style={{ fontSize: 9.5, marginBottom: 11 }}>What changed overnight</div>
+            {BRIEFING.overnight.map((t, i) => (
+              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 9 }}>
+                <span style={{ color: "var(--blue)", marginTop: 2, flexShrink: 0 }}>
+                  <Icon name="arrowR" size={12} />
+                </span>
+                <span style={{ fontSize: 12, lineHeight: 1.4, color: "var(--ink-soft)" }}>{t}</span>
               </div>
             ))}
           </div>
 
-          {/* Attention */}
-          <div style={{ padding: "0 16px", borderRight: "1px solid var(--rule-soft)" }}>
-            <div className="cap" style={{ marginBottom: 8 }}>Needs attention</div>
-            {BRIEFING.attention.map(([action, dept]) => (
-              <div
-                key={action}
-                style={{
-                  padding: "5px 0",
-                  borderBottom: "1px solid var(--rule-soft)",
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--ink)", lineHeight: 1.4 }}>{action}</div>
-                <div style={{ fontSize: 10.5, color: "var(--ink-faint)" }}>{dept}</div>
+          {/* 3. Needs attention (checkboxes) */}
+          <div style={{ padding: "16px 18px", borderRight: "1px solid var(--rule)" }}>
+            <div className="cap" style={{ fontSize: 9.5, marginBottom: 11 }}>Needs attention</div>
+            {BRIEFING.attention.map(([action, dept], i) => (
+              <div key={i} style={{ display: "flex", gap: 9, marginBottom: 11 }}>
+                <span style={{
+                  width: 16, height: 16, borderRadius: 5, flexShrink: 0, marginTop: 1,
+                  border: "1.5px solid var(--ink-faint)",
+                }} />
+                <div>
+                  <div style={{ fontSize: 12.5, fontWeight: 500, lineHeight: 1.35 }}>{action}</div>
+                  <div className="code" style={{ fontSize: 9 }}>{dept}</div>
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Expensive */}
-          <div style={{ padding: "0 0 0 16px" }}>
-            <div className="cap" style={{ marginBottom: 8 }}>Cost of inaction</div>
-            {BRIEFING.expensive.map(([risk, cost, note]) => (
-              <div
-                key={risk}
-                style={{
-                  padding: "5px 0",
-                  borderBottom: "1px solid var(--rule-soft)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: "var(--ink)" }}>{risk}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--red)", fontFamily: "var(--mono)" }}>
+          {/* 4. Expensive if ignored — red-wash background */}
+          <div style={{ padding: "16px 18px", background: "var(--red-wash)" }}>
+            <div className="cap" style={{ fontSize: 9.5, marginBottom: 11, color: "var(--red)" }}>
+              Expensive if ignored
+            </div>
+            {BRIEFING.expensive.map(([risk, cost, note], i) => (
+              <div key={i} style={{ marginBottom: 11 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 500 }}>{risk}</span>
+                  <span className="serif" style={{ fontSize: 15, fontWeight: 700, color: "var(--red)", flexShrink: 0 }}>
                     {cost}
                   </span>
                 </div>
-                <div style={{ fontSize: 10.5, color: "var(--ink-faint)", marginTop: 2 }}>{note}</div>
+                <div style={{ fontSize: 10.5, color: "var(--ink-faint)", marginTop: 1 }}>{note}</div>
               </div>
             ))}
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Agent grid */}
-      <div className="cap">Specialized agents</div>
+      {/* Agent cards grid */}
+      <div className="cap" style={{ marginTop: 4 }}>Specialized agents</div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        {AGENTS.map((agent) => (
-          <AgentCard key={agent.key} agent={agent} />
-        ))}
+        {AGENTS.map(agent => <AgentCard key={agent.key} agent={agent} />)}
       </div>
     </Screen>
   )
