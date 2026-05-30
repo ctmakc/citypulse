@@ -1,0 +1,61 @@
+"use client";
+
+import { useState } from "react";
+
+interface TimeBarProps {
+  inline?: boolean;
+}
+
+export default function TimeBar({ inline }: TimeBarProps) {
+  const [val, setVal] = useState(0);
+
+  const label =
+    val < -12
+      ? "History"
+      : val > 12
+      ? "Forecast"
+      : "Now";
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: inline ? 8 : 12,
+        flexWrap: "wrap",
+        padding: inline ? 0 : "10px 0",
+      }}
+    >
+      <span className="code" style={{ whiteSpace: "nowrap", color: "var(--ink-faint)" }}>
+        −72h
+      </span>
+      <input
+        type="range"
+        min={-72}
+        max={72}
+        value={val}
+        onChange={(e) => setVal(Number(e.target.value))}
+        style={{
+          flex: 1,
+          minWidth: 80,
+          accentColor: "var(--blue)",
+          cursor: "pointer",
+        }}
+      />
+      <span
+        className="code"
+        style={{
+          whiteSpace: "nowrap",
+          color: val > 12 ? "var(--amber)" : val < -12 ? "var(--slate)" : "var(--blue)",
+          minWidth: 52,
+          textAlign: "center",
+        }}
+      >
+        {label}
+      </span>
+      <span className="code" style={{ whiteSpace: "nowrap", color: "var(--amber)" }}>
+        +72h
+      </span>
+    </div>
+  );
+}
