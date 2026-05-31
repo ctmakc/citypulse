@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+e2e
+*.log
+.env*
+Dockerfile
+.dockerignore
+README.md
+ROADMAP.md
