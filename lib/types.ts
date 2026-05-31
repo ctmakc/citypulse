@@ -130,6 +130,9 @@ export interface Task {
   source: string;
 }
 
+// Layer categories used by the Digital Twin layer panel to filter map dots.
+export type MapLayer = 'assets' | 'environment' | 'mobility' | 'hazards' | 'citizen';
+
 export interface MapDot {
   x: number;
   y: number;
@@ -140,6 +143,10 @@ export interface MapDot {
   id?: string;
   tag?: string;
   crit?: boolean;
+  /** Layer group this dot belongs to (assets/environment/mobility/hazards/citizen). */
+  layer?: MapLayer;
+  /** Optional link to a known Asset (lib/data ASSETS) so clicking opens its inspector. */
+  assetId?: string;
 }
 
 export interface MapHeat {

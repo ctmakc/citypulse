@@ -9,7 +9,8 @@ import Donut from "@/components/ui/Donut"
 import Icon from "@/components/ui/Icon"
 import EmptyState from "@/components/ui/EmptyState"
 import Skeleton from "@/components/ui/Skeleton"
-import { PROJECTS } from "@/lib/data"
+import Card from "@/components/ui/Card"
+import { PROJECTS, ASSETS } from "@/lib/data"
 import { capitalApi, isLoggedIn } from "@/lib/api"
 import { usePortalStore } from "@/lib/store"
 import type { Project } from "@/lib/types"
@@ -57,6 +58,142 @@ const URGENCY_DONUT_COLOR: Record<string, string> = {
   Low: "var(--slate)",
 }
 
+// ─── Risk → project pipeline (PRD §9) ────────────────────────────────────────
+// Concrete worked example, grounded in the live data: predicted-failure main
+// MX-118 (asset WTR-2207, 82% failure) becomes funded capital project CP-118.
+type PipeStage = {
+  code: string
+  label: string
+  value: string
+  detail: string
+  ico: string
+  color: string
+  wash: string
+}
+
+const PIPE_STAGES: PipeStage[] = [
+  { code: "Asset", label: "Detected risk", value: "MX-118", detail: "Trunk main · Riverside", ico: "water", color: "var(--red)", wash: "var(--red-wash)" },
+  { code: "Model", label: "Failure probability", value: "82%", detail: "≤90-day window", ico: "warning", color: "var(--red)", wash: "var(--red-wash)" },
+  { code: "Cost", label: "Cost estimate", value: "$2.4M", detail: "vs ~$2.1M reactive", ico: "capital", color: "var(--amber)", wash: "var(--amber-wash)" },
+  { code: "Funding", label: "Funding source", value: "80% match", detail: "State Water Resilience Fund", ico: "shield", color: "var(--blue)", wash: "var(--blue-wash)" },
+  { code: "Draft", label: "Grant draft", value: "Ready", detail: "Narrative + budget + KPIs", ico: "exports", color: "var(--green)", wash: "var(--green-wash)" },
+  { code: "Project", label: "Capital project", value: "CP-118", detail: "Shovel-ready · Jun 28", ico: "check", color: "var(--green)", wash: "var(--green-wash)" },
+]
+
+function PipeArrow() {
+  return (
+    <div
+      className="pipe-arrow"
+      aria-hidden="true"
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-ghost)", flexShrink: 0 }}
+    >
+      <Icon name="arrowR" size={18} />
+    </div>
+  )
+}
+
+function StageCard({ stage, isLast }: { stage: PipeStage; isLast: boolean }) {
+  return (
+    <div
+      className="surface-flat"
+      style={{
+        flex: "1 1 150px",
+        minWidth: 0,
+        padding: "12px 14px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        borderLeft: `3px solid ${stage.color}`,
+        borderTopLeftRadius: isLast ? "var(--r)" : "var(--r-sm)",
+        borderBottomLeftRadius: isLast ? "var(--r)" : "var(--r-sm)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 8,
+            background: stage.wash,
+            color: stage.color,
+            display: "grid",
+            placeItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Icon name={stage.ico} size={14} />
+        </span>
+        <span className="cap" style={{ fontSize: 9.5, lineHeight: 1.2 }}>{stage.code}</span>
+      </div>
+      <div>
+        <div style={{ fontSize: 10.5, color: "var(--ink-faint)", fontWeight: 600, marginBottom: 3 }}>
+          {stage.label}
+        </div>
+        <div className="serif" style={{ fontSize: 17, fontWeight: 700, color: stage.color, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+          {stage.value}
+        </div>
+      </div>
+      <div style={{ fontSize: 10.5, color: "var(--ink-soft)", lineHeight: 1.35 }}>{stage.detail}</div>
+    </div>
+  )
+}
+
+function RiskPipeline({ onOpen }: { onOpen: () => void }) {
+  return (
+    <Card
+      title="Risk → project pipeline"
+      code="AI"
+      right={
+        <span style={{ fontSize: 11.5, color: "var(--ink-faint)" }}>
+          Transforms detected problems into funded capital projects
+        </span>
+      }
+      pad
+    >
+      <div
+        role="list"
+        aria-label="Risk to capital-project pipeline: MX-118 detected risk, 82% failure probability, $2.4M cost estimate, State Water Resilience Fund 80% match, grant draft ready, capital project CP-118"
+        style={{ display: "flex", alignItems: "stretch", gap: 6, flexWrap: "wrap" }}
+      >
+        {PIPE_STAGES.map((stage, i) => (
+          <div
+            role="listitem"
+            key={stage.code}
+            style={{ display: "contents" }}
+          >
+            <StageCard stage={stage} isLast={i === PIPE_STAGES.length - 1} />
+            {i < PIPE_STAGES.length - 1 && <PipeArrow />}
+          </div>
+        ))}
+      </div>
+      <div
+        style={{
+          marginTop: 12,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5, maxWidth: 560 }}>
+          The water model flagged trunk main <strong className="mono" style={{ color: "var(--ink)" }}>MX-118</strong> as a predicted failure.
+          CityPULSE matched it to a grant program, drafted the funder-ready package, and staged it as capital project{" "}
+          <strong className="mono" style={{ color: "var(--green)" }}>CP-118</strong> — shovel-ready before a reactive rupture.
+        </p>
+        <button
+          className="btn btn-ghost"
+          onClick={onOpen}
+          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, flexShrink: 0 }}
+        >
+          <Icon name="external" size={13} />
+          Open CP-118
+        </button>
+      </div>
+    </Card>
+  )
+}
+
 export default function Capital() {
   const setDetail = usePortalStore((s) => s.setDetail)
   const [projects, setProjects] = useState<Project[]>(PROJECTS)
@@ -80,6 +217,13 @@ export default function Capital() {
     return sum + num
   }, 0)
 
+  // Funder share = each project's cost × its grant match%, summed across the pipeline.
+  const grantAvailable = projects.reduce((sum, p) => {
+    const cost = parseFloat(p.cost.replace("$", "").replace("M", "")) || 0
+    const match = parseFloat(p.match.replace("%", "")) || 0
+    return sum + cost * (match / 100)
+  }, 0)
+
   return (
     <Screen>
       <ScreenHead
@@ -88,8 +232,19 @@ export default function Capital() {
         sub="Grant-eligible projects identified by the AI — ranked by funding probability, urgency and climate/safety/equity scores."
       />
 
+      {/* Risk → project pipeline (PRD §9) */}
+      <RiskPipeline onOpen={() => { const cp118 = projects.find((p) => p.id === "CP-118"); if (cp118) setDetail({ type: "project", data: cp118 }) }} />
+
+      {/* Pipeline summary stat strip */}
+      <div className="grid-4" style={{ gap: 12 }}>
+        <Stat label="Detected risks" value={ASSETS.length} sub="assets under AI watch" c="var(--red)" />
+        <Stat label="Converted to projects" value={projects.length} sub="risks staged as capital" c="var(--blue)" />
+        <Stat label="$ pipeline" value={`$${totalCost.toFixed(1)}M`} sub="estimated project cost" c="var(--ink)" />
+        <Stat label="Grant $ available" value={`$${grantAvailable.toFixed(1)}M`} sub="matched funder share" c="var(--green)" />
+      </div>
+
       {/* Summary stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+      <div className="grid-3" style={{ gap: 12 }}>
         <Stat label="Grant-eligible projects" value={projects.length} sub="AI-identified" c="var(--blue)" />
         <Stat label="Total pipeline" value={`$${totalCost.toFixed(1)}M`} sub="estimated project cost" c="var(--green)" />
         <Stat label="Nearest deadline" value="Jun 28" sub="CP-118 · State Water Fund" c="var(--amber)" />

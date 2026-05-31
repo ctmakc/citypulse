@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Icon from "@/components/ui/Icon";
 
 interface ScreenHeadProps {
@@ -11,19 +11,58 @@ interface ScreenHeadProps {
   actions?: ReactNode;
 }
 
+// Below this width the title/sub stack on top and actions wrap to a full-width row.
+const STACK_BELOW = 620;
+
+/**
+ * Tracks whether the viewport is narrow enough to stack the header.
+ * SSR-safe: renders desktop layout first, then corrects after mount so the
+ * title is never crushed to "T..." on real mobile widths.
+ */
+function useIsNarrow(maxWidth: number): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${maxWidth}px)`);
+    const update = () => setNarrow(mq.matches);
+    update();
+    // addEventListener('change') is supported everywhere we target; fall back for older Safari.
+    if (mq.addEventListener) {
+      mq.addEventListener("change", update);
+      return () => mq.removeEventListener("change", update);
+    }
+    mq.addListener(update);
+    return () => mq.removeListener(update);
+  }, [maxWidth]);
+  return narrow;
+}
+
 export default function ScreenHead({ ico, title, sub, color = "var(--blue)", actions }: ScreenHeadProps) {
+  const narrow = useIsNarrow(STACK_BELOW);
+
   return (
     <div
       style={{
         display: "flex",
-        alignItems: "center",
+        alignItems: narrow ? "flex-start" : "center",
         justifyContent: "space-between",
-        gap: 16,
+        gap: narrow ? 12 : 16,
         padding: "22px 0 6px",
+        // On narrow widths let the actions wrap onto their own line.
+        flexWrap: narrow ? "wrap" : "nowrap",
       }}
     >
       {/* Left side */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          // min-width:0 lets the title shrink and ellipsize gracefully instead of
+          // forcing a tiny "T..."; flex:1 1 auto so it takes the available row.
+          flex: "1 1 auto",
+          minWidth: 0,
+        }}
+      >
         {ico && (
           <div
             style={{
@@ -51,7 +90,9 @@ export default function ScreenHead({ ico, title, sub, color = "var(--blue)", act
               color: "var(--ink)",
               letterSpacing: "-0.02em",
               lineHeight: 1.2,
-              whiteSpace: "nowrap",
+              // When stacked, allow the title to wrap to 2 lines rather than truncate;
+              // on desktop keep the original single-line ellipsis behavior.
+              whiteSpace: narrow ? "normal" : "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
             }}
@@ -73,9 +114,19 @@ export default function ScreenHead({ ico, title, sub, color = "var(--blue)", act
         </div>
       </div>
 
-      {/* Right actions */}
+      {/* Right actions — wraps to a full-width row under the title on narrow widths. */}
       {actions && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexShrink: 0,
+            ...(narrow
+              ? { flexBasis: "100%", flexWrap: "wrap", justifyContent: "flex-start" }
+              : null),
+          }}
+        >
           {actions}
         </div>
       )}

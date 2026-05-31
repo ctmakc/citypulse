@@ -208,13 +208,13 @@ export const TASKS: Task[] = [
 ];
 
 export const MAP_DOTS: MapDot[] = [
-  { x: 24, y: 58, color: "#B23A33", size: 15, pulse: true, label: "Water main MX-118" },
-  { x: 78, y: 20, color: "#B23A33", size: 15, pulse: true, label: "Wildfire zone" },
-  { x: 47, y: 44, color: "#BC7E15", size: 13, label: "Vine & Harbor" },
-  { x: 62, y: 70, color: "#BC7E15", size: 13, label: "Westbank drainage" },
-  { x: 38, y: 30, color: "#185486", size: 11, label: "Cedar St bridge" },
-  { x: 55, y: 56, color: "#185486", size: 10, label: "311 cluster" },
-  { x: 70, y: 48, color: "#2C7A52", size: 9,  label: "Sensor station" },
+  { x: 24, y: 58, color: "#B23A33", size: 15, pulse: true, label: "Water main MX-118", layer: "assets",      assetId: "WTR-2207" },
+  { x: 78, y: 20, color: "#B23A33", size: 15, pulse: true, label: "Wildfire zone",      layer: "hazards" },
+  { x: 47, y: 44, color: "#BC7E15", size: 13,              label: "Vine & Harbor",      layer: "mobility",    assetId: "SIG-3390" },
+  { x: 62, y: 70, color: "#BC7E15", size: 13,              label: "Westbank drainage",  layer: "hazards",     assetId: "PMP-014" },
+  { x: 38, y: 30, color: "#185486", size: 11,              label: "Cedar St bridge",    layer: "assets",      assetId: "BRG-0072" },
+  { x: 55, y: 56, color: "#185486", size: 10,              label: "311 cluster",        layer: "citizen" },
+  { x: 70, y: 48, color: "#2C7A52", size: 9,               label: "Sensor station",     layer: "environment" },
 ];
 
 export const MAP_HEAT: MapHeat[] = [

@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/Icon";
-import { usePortalStore } from "@/lib/store";
+import { usePortalStore, canSee } from "@/lib/store";
 
 const NAV_GROUPS: [string, [string, string, number?][]][] = [
   ["Operations", [
@@ -76,7 +76,18 @@ const navItemReset: React.CSSProperties = {
 
 export default function Sidebar({ currentPath, onNavigate }: SidebarProps) {
   const router = useRouter();
-  const { currentUser } = usePortalStore();
+  // Read `role` from the store so changing it in the TopBar switcher
+  // immediately re-renders and re-filters the nav. `currentUser.role` is the
+  // signed-in identity; the `role` field is the "Viewing as" lens we gate on.
+  const { currentUser, role } = usePortalStore();
+
+  // Drop items the current role may not see, then drop any group left empty.
+  const visibleGroups = NAV_GROUPS
+    .map(([group, items]) =>
+      [group, items.filter(([slug]) => canSee(role, slug))] as
+        [string, [string, string, number?][]]
+    )
+    .filter(([, items]) => items.length > 0);
 
   function go(slug: string) {
     router.push(`/${slug}`);
@@ -100,7 +111,7 @@ export default function Sidebar({ currentPath, onNavigate }: SidebarProps) {
       }}
     >
       <div style={{ flex: 1 }}>
-        {NAV_GROUPS.map(([group, items]) => (
+        {visibleGroups.map(([group, items]) => (
           <div key={group} style={{ marginBottom: 4 }}>
             <div
               className="cap"

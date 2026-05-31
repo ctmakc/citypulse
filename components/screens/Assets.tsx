@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import Screen from "@/components/ui/Screen"
+import Icon from "@/components/ui/Icon"
 import ScreenHead from "@/components/ui/ScreenHead"
 import Pill from "@/components/ui/Pill"
 import CondBar from "@/components/ui/CondBar"
@@ -175,17 +177,11 @@ export default function Assets() {
           <EmptyState title="No matching records" sub="Try adjusting your filters" />
         ) : (
           filtered.map((asset) => (
-            <div
+            <Link
               key={asset.id}
+              href={`/assets/${encodeURIComponent(asset.id)}`}
               role="row"
-              tabIndex={0}
-              onClick={() => setDetail({ type: "asset", data: asset })}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault()
-                  setDetail({ type: "asset", data: asset })
-                }
-              }}
+              aria-label={`Open ${asset.name} (${asset.id})`}
               style={{
                 display: "grid",
                 gridTemplateColumns: GRID,
@@ -193,6 +189,8 @@ export default function Assets() {
                 borderBottom: "1px solid var(--rule-soft)",
                 alignItems: "center",
                 cursor: "pointer",
+                color: "inherit",
+                textDecoration: "none",
                 transition: "background .15s",
               }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
@@ -229,10 +227,34 @@ export default function Assets() {
                 </span>
               </div>
               <div role="cell" style={{ padding: "0 6px", fontSize: 12, color: "var(--ink-soft)" }}>{asset.dept}</div>
-              <div role="cell" style={{ padding: "0 6px" }}>
+              <div role="cell" style={{ padding: "0 6px", display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" }}>
                 <Pill sev={asset.risk} />
+                {/* Quick peek — opens the side drawer without leaving the page. */}
+                <button
+                  type="button"
+                  aria-label={`Quick peek at ${asset.name}`}
+                  title="Quick peek"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setDetail({ type: "asset", data: asset })
+                  }}
+                  style={{
+                    appearance: "none",
+                    background: "transparent",
+                    border: "1px solid var(--rule)",
+                    borderRadius: "var(--r-sm)",
+                    padding: "4px",
+                    lineHeight: 0,
+                    color: "var(--ink-faint)",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon name="search" size={13} />
+                </button>
               </div>
-            </div>
+            </Link>
           ))
         )}
       </div>

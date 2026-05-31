@@ -60,12 +60,13 @@ export const dashboardApi = {
 
 // Assets
 export const assetsApi = {
-  list:   (filters?: Record<string, string>) => ifAuth(() => api.get('/assets', { params: filters })),
-  map:    () => ifAuth(() => api.get('/assets/map')),
-  stats:  () => ifAuth(() => api.get('/assets/stats')),
-  get:    (id: string) => ifAuth(() => api.get(`/assets/${id}`)),
-  create: (data: unknown) => ifAuth(() => api.post('/assets', data)),
-  update: (id: string, data: unknown) => ifAuth(() => api.patch(`/assets/${id}`, data)),
+  list:     (filters?: Record<string, string>) => ifAuth(() => api.get('/assets', { params: filters })),
+  map:      () => ifAuth(() => api.get('/assets/map')),
+  stats:    () => ifAuth(() => api.get('/assets/stats')),
+  get:      (id: string) => ifAuth(() => api.get(`/assets/${id}`)),
+  readings: (id: string) => ifAuth(() => api.get(`/assets/${id}/readings`)),
+  create:   (data: unknown) => ifAuth(() => api.post('/assets', data)),
+  update:   (id: string, data: unknown) => ifAuth(() => api.patch(`/assets/${id}`, data)),
 }
 
 // 311 Reports

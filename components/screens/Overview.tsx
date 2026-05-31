@@ -14,7 +14,42 @@ import Icon from "@/components/ui/Icon"
 import Skeleton from "@/components/ui/Skeleton"
 import { KPIS, ALERTS, ACTIONS, PROJECTS, MAP_DOTS, MAP_HEAT } from "@/lib/data"
 import { dashboardApi, isLoggedIn } from "@/lib/api"
+import { usePortalStore } from "@/lib/store"
 import type { MapDot } from "@/lib/types"
+
+/**
+ * Role-based Overview emphasis.
+ *
+ * Same components, same data — only ordering/emphasis changes. For each role we
+ * declare which KPI keys lead (the rest keep their static order behind them) and
+ * which action departments float to the top of the priority list. Unmapped roles
+ * (e.g. Mayor / City Manager leadership view) fall back to the static order.
+ */
+const ROLE_EMPHASIS: Record<string, { kpis: string[]; depts: string[] }> = {
+  "Public Works":   { kpis: ["water", "infra"],  depts: ["Water", "Public Works"] },
+  "Utilities":      { kpis: ["water", "infra"],  depts: ["Water", "Public Works"] },
+  "Transportation": { kpis: ["traffic"],          depts: ["Transport"] },
+  "Environment":    { kpis: ["air", "water", "fire"], depts: ["Environment", "Fire", "Water"] },
+  "Emergency Mgmt": { kpis: ["fire", "infra"],   depts: ["Fire", "Emergency"] },
+  "Grants Office":  { kpis: ["cost"],             depts: ["Grants Office"] },
+  "Citizen Support":{ kpis: ["r311"],             depts: ["Public Works"] },
+}
+
+/**
+ * Stable reorder: items whose `keyOf` is in `lead` come first (in `lead` order),
+ * everything else keeps its original relative order. Pure ordering, no filtering.
+ */
+function prioritize<T>(items: T[], lead: string[], keyOf: (t: T) => string): T[] {
+  if (!lead.length) return items
+  const rank = (t: T) => {
+    const i = lead.indexOf(keyOf(t))
+    return i === -1 ? lead.length : i
+  }
+  return [...items]
+    .map((item, idx) => ({ item, idx }))
+    .sort((a, b) => rank(a.item) - rank(b.item) || a.idx - b.idx)
+    .map(({ item }) => item)
+}
 
 const STATUS_COLOR: Record<string, string> = {
   "s-critical": "var(--red)",
@@ -110,6 +145,7 @@ function KpiTileSkeleton() {
 }
 
 export default function Overview() {
+  const role = usePortalStore(s => s.role)
   const [haz, setHaz] = useState<HazFilter>("All")
   const [liveKpis, setLiveKpis] = useState(KPIS)
   const [liveAlerts, setLiveAlerts] = useState(ALERTS)
@@ -129,7 +165,15 @@ export default function Overview() {
       .finally(() => setLoading(false))
   }, [])
 
-  const topKpis = liveKpis.filter(k => OVERVIEW_KPIS.includes(k.key))
+  // Always the same 5 tiles, but the role's domain leads. Static fallback when unmapped.
+  const emphasis = ROLE_EMPHASIS[role]
+  const topKpis = prioritize(
+    liveKpis.filter(k => OVERVIEW_KPIS.includes(k.key)),
+    emphasis?.kpis ?? [],
+    k => k.key,
+  )
+  // Priority actions reorder so the role's departments surface first; list stays complete.
+  const topActions = prioritize(ACTIONS, emphasis?.depts ?? [], a => a.dept)
 
   return (
     <Screen>
@@ -291,7 +335,7 @@ export default function Overview() {
       {/* Bottom 2-column: Priority actions + Grant pipeline */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Card title="Priority actions" code="AI" right={<span className="code">Generated 07:40</span>}>
-          {ACTIONS.map(a => (
+          {topActions.map(a => (
             <RecRow key={a.p} n={a.p} text={a.text} impact={a.impact} c="var(--green)" />
           ))}
         </Card>
