@@ -65,7 +65,7 @@ export default function DataSources() {
                     className="mono"
                     style={{ fontSize: 12.5, color: "var(--ink-soft)" }}
                   >
-                    {count.toLocaleString()}
+                    {count.toLocaleString("en-US")}
                   </div>
                 </div>
               ))}

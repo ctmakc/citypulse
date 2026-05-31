@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 
 interface AreaChartProps {
   data: number[];
@@ -59,7 +59,7 @@ export default function AreaChart({
     return { min, max, points, areaPoints, thrY, bandY1, bandY2, lastPt: { x: lastX, y: lastY } };
   }, [data, height, threshold, band]);
 
-  const gradId = `ag-${Math.random().toString(36).slice(2, 7)}`;
+  const gradId = `ag-${useId().replace(/:/g, "")}`;
 
   return (
     <svg

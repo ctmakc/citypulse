@@ -1,5 +1,8 @@
 // CityPULSE public marketing home — SERVER component
 
+import SiteHeader from '@/components/site/SiteHeader';
+import SiteFooter from '@/components/site/SiteFooter';
+
 const INK = '#2A3037';
 const PAPER = '#F3F0E8';
 const RULE = '#E8E3D8';
@@ -63,33 +66,10 @@ const sectionPad: React.CSSProperties = {
 
 // ── SVGs ─────────────────────────────────────────────────────────────────────
 
-function SealIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width={28}
-      height={28}
-      fill="none"
-      stroke={INK}
-      strokeWidth={2.1}
-    >
-      <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" />
-    </svg>
-  );
-}
-
 function ArrowRight({ color = 'currentColor' }: { color?: string }) {
   return (
     <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke={color} strokeWidth={2}>
       <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  );
-}
-
-function HamburgerIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke={INK} strokeWidth={2}>
-      <path d="M3 6h18M3 12h18M3 18h18" />
     </svg>
   );
 }
@@ -460,9 +440,6 @@ export default function HomePage() {
         body{font-family:"Archivo",-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;}
         a{text-decoration:none;color:inherit;}
         @media(max-width:768px){
-          .site-nav-links{display:none!important;}
-          .site-nav-btn{display:none!important;}
-          .site-burger{display:flex!important;}
           .hero-grid-inner{flex-direction:column!important;}
           .hero-mockup{display:none!important;}
           .modules-grid{grid-template-columns:1fr!important;}
@@ -473,60 +450,7 @@ export default function HomePage() {
       `}</style>
 
       {/* ━━━━━━━━━━━━━━ 1. HEADER ━━━━━━━━━━━━━━ */}
-      <header style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        background: 'rgba(243,240,232,0.92)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: `1px solid ${RULE}`,
-      }}>
-        <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60, gap: 24 }}>
-          {/* Brand */}
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-            <span style={{
-              width: 34, height: 34, background: INK, borderRadius: 8,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>
-              <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="#fff" strokeWidth={2.1}>
-                <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" />
-              </svg>
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-              <span style={{ fontFamily: serif, fontSize: 17, fontWeight: 700, color: INK, letterSpacing: '-0.02em' }}>CityPULSE</span>
-              <span style={{ fontFamily: mono, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: INK_FAINT, marginTop: 1 }}>Civil Operating System</span>
-            </div>
-          </a>
-
-          {/* Center nav */}
-          <nav className="site-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {['Platform', 'Solutions', 'Security', 'Sign in'].map((label) => (
-              <a
-                key={label}
-                href={`/${label.toLowerCase().replace(' ', '-')}`}
-                style={{ fontFamily: grotesk, fontSize: 13.5, fontWeight: 500, color: INK_SOFT, padding: '6px 12px', borderRadius: 8, transition: 'color .15s' }}
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-
-          {/* Right CTA */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <a className="site-nav-btn" href="/contact" style={{ ...btnPrimary, padding: '9px 18px', fontSize: 13 }}>
-              Request a pilot
-            </a>
-            {/* Hamburger */}
-            <button
-              className="site-burger"
-              aria-label="Open menu"
-              style={{ display: 'none', background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}
-            >
-              <HamburgerIcon />
-            </button>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* ━━━━━━━━━━━━━━ 2. HERO ━━━━━━━━━━━━━━ */}
       <section style={{ ...sectionPad, paddingTop: 72, paddingBottom: 80, background: PAPER }}>
@@ -760,63 +684,7 @@ export default function HomePage() {
       </section>
 
       {/* ━━━━━━━━━━━━━━ 8. FOOTER ━━━━━━━━━━━━━━ */}
-      <footer style={{ background: DARK_BG, color: 'rgba(255,255,255,0.65)', padding: '52px 0 32px' }}>
-        <div style={wrap}>
-          <div
-            className="ft-grid-inner"
-            style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, marginBottom: 40 }}
-          >
-            {/* Brand column */}
-            <div>
-              <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 16 }}>
-                <span style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.12)', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="#fff" strokeWidth={2.1}>
-                    <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" />
-                  </svg>
-                </span>
-                <span style={{ fontFamily: serif, fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>CityPULSE</span>
-              </a>
-              <p style={{ fontFamily: grotesk, fontSize: 13, lineHeight: 1.6, maxWidth: '32ch', color: 'rgba(255,255,255,0.45)' }}>
-                The civic operating system for infrastructure, climate and environmental resilience.
-              </p>
-            </div>
-
-            {/* Platform */}
-            <div>
-              <div style={{ fontFamily: grotesk, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Platform</div>
-              {['Digital twin', 'AI agents', 'Capital & grants', 'Integrations'].map((l) => (
-                <a key={l} href="/platform" style={{ display: 'block', fontFamily: grotesk, fontSize: 13.5, color: 'rgba(255,255,255,0.6)', marginBottom: 10, textDecoration: 'none' }}>{l}</a>
-              ))}
-            </div>
-
-            {/* Solutions */}
-            <div>
-              <div style={{ fontFamily: grotesk, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Solutions</div>
-              {['City managers', 'Emergency management', 'Utilities', 'Grants office'].map((l) => (
-                <a key={l} href="/solutions" style={{ display: 'block', fontFamily: grotesk, fontSize: 13.5, color: 'rgba(255,255,255,0.6)', marginBottom: 10, textDecoration: 'none' }}>{l}</a>
-              ))}
-            </div>
-
-            {/* Company */}
-            <div>
-              <div style={{ fontFamily: grotesk, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Company</div>
-              {['Security', 'Request a pilot', 'Contact'].map((l) => (
-                <a key={l} href="/contact" style={{ display: 'block', fontFamily: grotesk, fontSize: 13.5, color: 'rgba(255,255,255,0.6)', marginBottom: 10, textDecoration: 'none' }}>{l}</a>
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom bar */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.09)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <span style={{ fontFamily: grotesk, fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
-              © 2026 CityPulse. Built for resilient cities.
-            </span>
-            <span style={{ fontFamily: grotesk, fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
-              Privacy · Accessibility (WCAG 2.1 AA) · Open data
-            </span>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </>
   );
 }

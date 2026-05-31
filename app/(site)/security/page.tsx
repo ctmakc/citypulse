@@ -1,110 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import SiteHeader from '@/components/site/SiteHeader'
+import SiteFooter from '@/components/site/SiteFooter'
 
 export const metadata: Metadata = {
   title: 'Security · CityPULSE Civil OS',
   description:
     'CityPulse is designed to meet the security, privacy and compliance requirements of public sector organizations.',
-}
-
-/* ─── Nav (shared pattern) ─────────────────────────────────────────── */
-function SiteNav() {
-  return (
-    <nav
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        borderBottom: '1px solid var(--rule)',
-        background: 'rgba(243,240,232,0.92)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1140,
-          margin: '0 auto',
-          padding: '0 28px',
-          height: 60,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 32,
-        }}
-      >
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'var(--ink)',
-              display: 'grid',
-              placeItems: 'center',
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="4" fill="white" opacity="0.9" />
-              <circle cx="9" cy="9" r="7.5" stroke="white" strokeWidth="1.2" opacity="0.45" />
-            </svg>
-          </div>
-          <span
-            className="serif"
-            style={{ fontSize: 17, fontWeight: 600, color: 'var(--ink)', letterSpacing: '-0.02em' }}
-          >
-            CityPulse
-          </span>
-        </Link>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          {[
-            { label: 'Solutions', href: '/solutions' },
-            { label: 'Security', href: '/security' },
-            { label: 'Pricing', href: '#' },
-            { label: 'Docs', href: '#' },
-          ].map(({ label, href }) => (
-            <Link
-              key={label}
-              href={href}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 'var(--r-pill)',
-                fontSize: 13,
-                fontWeight: 500,
-                color: 'var(--ink-soft)',
-                textDecoration: 'none',
-              }}
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <Link
-            href="/login"
-            style={{
-              fontSize: 13,
-              fontWeight: 500,
-              color: 'var(--ink-soft)',
-              textDecoration: 'none',
-              padding: '0 4px',
-            }}
-          >
-            Sign in
-          </Link>
-          <Link
-            href="#demo"
-            className="btn"
-            style={{ fontSize: 12.5, padding: '8px 16px', textDecoration: 'none' }}
-          >
-            Request demo
-          </Link>
-        </div>
-      </div>
-    </nav>
-  )
 }
 
 /* ─── Data ──────────────────────────────────────────────────────────── */
@@ -218,7 +120,7 @@ const responseRows = [
 export default function SecurityPage() {
   return (
     <>
-      <SiteNav />
+      <SiteHeader />
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section
@@ -662,40 +564,7 @@ export default function SecurityPage() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: '1px solid var(--rule)', padding: '28px 28px' }}>
-        <div
-          style={{
-            maxWidth: 1140,
-            margin: '0 auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
-            flexWrap: 'wrap',
-          }}
-        >
-          <span
-            className="code"
-            style={{ fontSize: 10, color: 'var(--ink-faint)', letterSpacing: '0.1em' }}
-          >
-            CITYPULSE · CIVIL OS
-          </span>
-          <div style={{ display: 'flex', gap: 20 }}>
-            {['Privacy', 'Terms', 'Security', 'Status'].map((l) => (
-              <Link
-                key={l}
-                href={l === 'Security' ? '/security' : '#'}
-                style={{ fontSize: 12.5, color: 'var(--ink-faint)', textDecoration: 'none' }}
-              >
-                {l}
-              </Link>
-            ))}
-          </div>
-          <span style={{ fontSize: 12, color: 'var(--ink-ghost)' }}>
-            © 2026 CityPulse Technologies
-          </span>
-        </div>
-      </footer>
+      <SiteFooter />
     </>
   )
 }

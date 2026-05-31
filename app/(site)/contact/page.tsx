@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import Icon from '@/components/ui/Icon'
+import SiteHeader from '@/components/site/SiteHeader'
+import SiteFooter from '@/components/site/SiteFooter'
 
 /* ---------- Small reusable styled field wrappers ---------- */
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -52,129 +53,6 @@ function Field({
       </FieldLabel>
       {children}
     </div>
-  )
-}
-
-/* ---------- Nav ---------- */
-function SiteNav() {
-  return (
-    <header style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      background: 'rgba(243,240,232,.92)',
-      backdropFilter: 'blur(12px)',
-      borderBottom: '1px solid var(--rule)',
-    }}>
-      <div style={{
-        maxWidth: 1180,
-        margin: '0 auto',
-        padding: '0 28px',
-        height: 60,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        {/* Brand */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'var(--ink)' }}>
-          <div style={{
-            width: 34, height: 34, borderRadius: 8,
-            background: 'var(--ink)', display: 'grid', placeItems: 'center', flexShrink: 0,
-          }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.1" width="18" height="18">
-              <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" />
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 14.5, letterSpacing: '-0.01em', lineHeight: 1 }}>CityPULSE</div>
-            <div style={{ fontSize: 10, color: 'var(--ink-faint)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>Civil Operating System</div>
-          </div>
-        </Link>
-
-        {/* Nav links */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Link href="/platform" style={{ padding: '6px 12px', fontSize: 13.5, fontWeight: 500, color: 'var(--ink-soft)', textDecoration: 'none', borderRadius: 'var(--r-sm)', transition: 'background .14s' }}>Platform</Link>
-          <Link href="/solutions" style={{ padding: '6px 12px', fontSize: 13.5, fontWeight: 500, color: 'var(--ink-soft)', textDecoration: 'none', borderRadius: 'var(--r-sm)', transition: 'background .14s' }}>Solutions</Link>
-          <Link href="/security" style={{ padding: '6px 12px', fontSize: 13.5, fontWeight: 500, color: 'var(--ink-soft)', textDecoration: 'none', borderRadius: 'var(--r-sm)', transition: 'background .14s' }}>Security</Link>
-          <Link href="/login" style={{ padding: '6px 14px', fontSize: 13.5, fontWeight: 500, color: 'var(--ink-soft)', textDecoration: 'none', marginLeft: 4 }}>Sign in</Link>
-          <Link href="/contact" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '9px 18px', fontSize: 13, fontWeight: 600,
-            background: 'var(--ink)', color: '#fff', borderRadius: 'var(--r-pill)',
-            textDecoration: 'none', marginLeft: 4,
-            transition: 'background .15s',
-          }}>
-            Request a pilot
-          </Link>
-        </nav>
-      </div>
-    </header>
-  )
-}
-
-/* ---------- Footer ---------- */
-function SiteFooter() {
-  return (
-    <footer style={{ background: 'var(--ink)', color: 'rgba(255,255,255,.55)', marginTop: 96 }}>
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '64px 28px 36px' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1fr',
-          gap: 48,
-          marginBottom: 56,
-        }}>
-          {/* Brand col */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 7, background: 'rgba(255,255,255,.1)', display: 'grid', placeItems: 'center' }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.1" width="16" height="16">
-                  <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" />
-                </svg>
-              </div>
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>CityPULSE</span>
-            </div>
-            <p style={{ fontSize: 13.5, lineHeight: 1.65, maxWidth: 280 }}>
-              The civic operating system for infrastructure, climate and environmental resilience.
-            </p>
-          </div>
-
-          {/* Platform */}
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)', marginBottom: 16 }}>Platform</div>
-            {['Digital twin', 'AI agents', 'Capital & grants', 'Integrations'].map(l => (
-              <Link key={l} href="/platform" style={{ display: 'block', fontSize: 13.5, color: 'rgba(255,255,255,.55)', textDecoration: 'none', marginBottom: 10, transition: 'color .14s' }}>{l}</Link>
-            ))}
-          </div>
-
-          {/* Solutions */}
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)', marginBottom: 16 }}>Solutions</div>
-            {['City managers', 'Emergency management', 'Utilities', 'Grants office'].map(l => (
-              <Link key={l} href="/solutions" style={{ display: 'block', fontSize: 13.5, color: 'rgba(255,255,255,.55)', textDecoration: 'none', marginBottom: 10 }}>{l}</Link>
-            ))}
-          </div>
-
-          {/* Company */}
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)', marginBottom: 16 }}>Company</div>
-            {[['Security', '/security'], ['Request a pilot', '/contact'], ['Contact', '/contact']].map(([l, h]) => (
-              <Link key={l} href={h} style={{ display: 'block', fontSize: 13.5, color: 'rgba(255,255,255,.55)', textDecoration: 'none', marginBottom: 10 }}>{l}</Link>
-            ))}
-          </div>
-        </div>
-
-        <div style={{
-          borderTop: '1px solid rgba(255,255,255,.1)',
-          paddingTop: 24,
-          display: 'flex',
-          justifyContent: 'space-between',
-          fontSize: 12.5,
-        }}>
-          <span>© 2026 CityPULSE. A demonstration concept.</span>
-          <span>Privacy · Accessibility (WCAG 2.1 AA) · Open data</span>
-        </div>
-      </div>
-    </footer>
   )
 }
 
@@ -253,7 +131,7 @@ export default function ContactPage() {
 
   return (
     <div style={{ fontFamily: 'var(--grotesk)', minHeight: '100vh', background: 'var(--paper)', overflow: 'auto' }}>
-      <SiteNav />
+      <SiteHeader />
 
       {/* ---- Page hero strip ---- */}
       <div style={{ background: 'var(--ink)', padding: '56px 28px 52px' }}>
