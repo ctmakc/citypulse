@@ -45,28 +45,26 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
   const { aiOpen, setAIOpen, picked, setPicked, detail, setDetail, navOpen, setNavOpen, setCurrentUser, role } = usePortalStore();
 
-  // Attempt to load current user from /auth/me on mount
+  // Load current user — only if token exists, otherwise use placeholder immediately
   useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('citypulse_token') : null;
+
+    if (!token) {
+      setCurrentUser({ name: "Jordan Rivera", email: "j.rivera@meridian.gov", role, initials: "JR" });
+      return;
+    }
+
     authApi.me()
       .then((res) => {
         const data = res.data?.user ?? res.data;
         if (data?.name) {
-          setCurrentUser({
-            name: data.name,
-            email: data.email ?? "",
-            role: data.role ?? role,
-            initials: getInitials(data.name),
-          });
+          setCurrentUser({ name: data.name, email: data.email ?? "", role: data.role ?? role, initials: getInitials(data.name) });
+        } else {
+          setCurrentUser({ name: "Jordan Rivera", email: "j.rivera@meridian.gov", role, initials: "JR" });
         }
       })
       .catch(() => {
-        // Not authenticated or API unavailable — fall back to default placeholder
-        setCurrentUser({
-          name: "Jordan Rivera",
-          email: "j.rivera@meridian.gov",
-          role: role,
-          initials: "JR",
-        });
+        setCurrentUser({ name: "Jordan Rivera", email: "j.rivera@meridian.gov", role, initials: "JR" });
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
