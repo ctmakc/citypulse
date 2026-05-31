@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3096/api/v1'
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3096/api/v1'
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -75,6 +75,21 @@ export const reports311Api = {
   stats:        () => ifAuth(() => api.get('/reports311/stats')),
   submit:       (data: unknown) => api.post('/reports311', data), // public
   updateStatus: (id: string, status: string) => ifAuth(() => api.patch(`/reports311/${id}/status`, { status })),
+  track:        (code: string) => api.get(`/reports311/track/${code}`), // public
+}
+
+// Report generation / export — type slugs:
+// council-briefing | department | grant | climate | infrastructure-condition |
+// emergency-event | public-transparency
+export type ReportJobState = 'waiting' | 'active' | 'completed' | 'failed'
+
+export const reportsApi = {
+  // Kick off a report build → { jobId }
+  generate: (type: string) => ifAuth(() => api.post<{ jobId: string }>(`/reports/${type}/generate`)),
+  // Poll a job → { state, url? }
+  status:   (jobId: string) => ifAuth(() => api.get<{ state: ReportJobState; url?: string }>(`/reports/${jobId}/status`)),
+  // Absolute URL to stream the finished file (open in a new tab)
+  downloadUrl: (file: string) => `${API_BASE}/reports/download/${file}`,
 }
 
 // Alerts
