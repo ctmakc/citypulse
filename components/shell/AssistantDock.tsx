@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Icon from "@/components/ui/Icon";
+import { agentsApi } from "@/lib/api";
 
 interface Message {
   id: number;
@@ -46,17 +47,26 @@ export default function AssistantDock({ open, onClose }: AssistantDockProps) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  function sendMessage(text: string) {
+  async function sendMessage(text: string) {
     if (!text.trim()) return;
     const userMsg: Message = { id: nextId(), role: "user", text };
+    const history = messages.map(m => ({ role: m.role === "ai" ? "assistant" : "user", content: m.text }));
     setMessages((m) => [...m, userMsg]);
     setInputValue("");
     setIsTyping(true);
-    const reply = SCRIPTED[text] ?? "I'm analyzing that now. Based on the current data feeds, I'll have a detailed answer shortly.";
-    setTimeout(() => {
+    try {
+      const res = await agentsApi.chat(text, history);
+      const reply: string = res.data?.reply ?? res.data?.message ?? JSON.stringify(res.data);
       setIsTyping(false);
       setMessages((m) => [...m, { id: nextId(), role: "ai", text: reply }]);
-    }, 1500);
+    } catch {
+      // Fall back to scripted responses if API is unavailable
+      const reply = SCRIPTED[text] ?? "I'm analyzing that now. Based on the current data feeds, I'll have a detailed answer shortly.";
+      setTimeout(() => {
+        setIsTyping(false);
+        setMessages((m) => [...m, { id: nextId(), role: "ai", text: reply }]);
+      }, 1500);
+    }
   }
 
   return (
