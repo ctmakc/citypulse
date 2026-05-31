@@ -38,9 +38,9 @@
   --sh-pop: 0 18px 48px rgba(28,33,39,.18);
 
   /* ---- Type ---- */
-  --serif: "Spectral", Georgia, serif;
-  --grotesk: "Archivo", -apple-system, BlinkMacSystemFont, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --serif: var(--font-spectral), "Spectral", Georgia, serif;
+  --grotesk: var(--font-archivo), "Archivo", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -149,3 +149,9 @@ button { font-family: var(--grotesk); }
 
 /* Leaflet CSS fix */
 .leaflet-container { height: 100%; width: 100%; }
+
+/* ---------- Skeleton shimmer ---------- */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

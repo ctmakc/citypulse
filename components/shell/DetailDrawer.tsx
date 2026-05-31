@@ -2,6 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import Donut from "@/components/ui/Donut";
+import CondBar from "@/components/ui/CondBar";
+import Pill from "@/components/ui/Pill";
+import type { Asset } from "@/lib/types";
 
 interface DetailDrawerProps {
   detail: any | null;
@@ -152,6 +155,197 @@ function ReportDetail({ d }: { d: any }) {
   );
 }
 
+// Map asset type string → icon name
+function assetIcon(type: string): string {
+  const t = type.toLowerCase();
+  if (t.includes("bridge")) return "layers";
+  if (t.includes("road")) return "traffic";
+  if (t.includes("water")) return "water";
+  if (t.includes("hydrant")) return "flood";
+  if (t.includes("streetlight")) return "sparkles";
+  if (t.includes("signal")) return "bell";
+  if (t.includes("pump")) return "water";
+  if (t.includes("building")) return "capital";
+  return "assets";
+}
+
+function getAIExplanation(asset: Asset): string {
+  if (asset.risk === "Critical")
+    return `${asset.name} has a condition index of ${asset.cond}/100 and a ${Math.round(parseFloat(asset.prob))}% predicted failure probability. Immediate inspection is recommended.`;
+  if (asset.risk === "Elevated")
+    return `${asset.name} is trending below safe thresholds (condition: ${asset.cond}/100). Scheduled inspection recommended within 30 days.`;
+  return `${asset.name} is operating within normal parameters (condition: ${asset.cond}/100).`;
+}
+
+function AssetDetail({ d }: { d: Asset }) {
+  const risk = d.risk;
+
+  return (
+    <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: "var(--r)",
+            background: "var(--surface-2)",
+            border: "1px solid var(--rule)",
+            display: "grid",
+            placeItems: "center",
+            color: "var(--ink-soft)",
+            flexShrink: 0,
+          }}
+        >
+          <Icon name={assetIcon(d.type)} size={20} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div className="mono" style={{ fontSize: 11, color: "var(--blue)", marginBottom: 2 }}>{d.id}</div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)", lineHeight: 1.2 }}>{d.name}</div>
+          <div style={{ fontSize: 12, color: "var(--ink-faint)", marginTop: 2 }}>{d.where}</div>
+        </div>
+        <Pill sev={risk} />
+      </div>
+
+      {/* Condition bar */}
+      <div>
+        <div className="cap" style={{ marginBottom: 8 }}>Condition Index</div>
+        <CondBar v={d.cond} />
+      </div>
+
+      {/* AI explanation */}
+      <div
+        style={{
+          background: "var(--surface-2)",
+          border: "1px solid var(--rule-soft)",
+          borderRadius: "var(--r)",
+          padding: "14px 16px",
+        }}
+      >
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+          <Icon name="sparkles" size={13} style={{ color: "var(--blue)" }} />
+          <span className="cap">AI Risk Explanation</span>
+        </div>
+        <div style={{ fontSize: 13, lineHeight: 1.6, color: "var(--ink-soft)" }}>
+          {getAIExplanation(d)}
+        </div>
+      </div>
+
+      {/* 4-col readout */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {[
+          ["Department", d.dept],
+          ["District", d.where],
+          ["Condition", `${d.cond}/100`],
+          ["Failure Prob.", d.prob],
+        ].map(([label, val]) => (
+          <div key={label}>
+            <div className="cap" style={{ marginBottom: 2 }}>{label}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{val}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Inspection */}
+      <div>
+        <div className="cap" style={{ marginBottom: 8 }}>Inspection History</div>
+        <div
+          style={{
+            padding: "12px 14px",
+            background: "var(--surface-2)",
+            borderRadius: "var(--r-sm)",
+            border: "1px solid var(--rule-soft)",
+            fontSize: 13,
+            color: "var(--ink-faint)",
+          }}
+        >
+          Last inspection: N/A
+        </div>
+      </div>
+
+      {/* Recommended actions */}
+      <div>
+        <div className="cap" style={{ marginBottom: 8 }}>Recommended Actions</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {risk === "Critical" && (
+            <>
+              <button
+                className="btn"
+                style={{ background: "var(--red)", justifyContent: "flex-start", fontSize: 13, padding: "10px 14px" }}
+              >
+                <Icon name="warning" size={14} />
+                Schedule emergency inspection
+              </button>
+              <button
+                className="btn"
+                style={{ justifyContent: "flex-start", fontSize: 13, padding: "10px 14px" }}
+              >
+                <Icon name="tasks" size={14} />
+                Create work order
+              </button>
+            </>
+          )}
+          {risk === "Elevated" && (
+            <>
+              <button
+                className="btn btn-ghost"
+                style={{ justifyContent: "flex-start", fontSize: 13, padding: "10px 14px" }}
+              >
+                <Icon name="calendar" size={14} />
+                Schedule inspection
+              </button>
+              <button
+                className="btn btn-ghost"
+                style={{ justifyContent: "flex-start", fontSize: 13, padding: "10px 14px" }}
+              >
+                <Icon name="flag" size={14} />
+                Flag for review
+              </button>
+            </>
+          )}
+          {risk === "Watch" && (
+            <>
+              <button
+                className="btn btn-ghost"
+                style={{ justifyContent: "flex-start", fontSize: 13, padding: "10px 14px" }}
+              >
+                <Icon name="info" size={14} />
+                Monitor condition
+              </button>
+              <button
+                className="btn btn-ghost"
+                style={{ justifyContent: "flex-start", fontSize: 13, padding: "10px 14px" }}
+              >
+                <Icon name="list" size={14} />
+                Queue for inspection
+              </button>
+            </>
+          )}
+          {risk === "OK" && (
+            <button
+              className="btn btn-ghost"
+              disabled
+              style={{ justifyContent: "flex-start", fontSize: 13, padding: "10px 14px", opacity: 0.5 }}
+            >
+              <Icon name="check" size={14} />
+              Condition good
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Footer CTA */}
+      <button
+        className="btn"
+        style={{ justifyContent: "center", marginTop: 4 }}
+      >
+        <Icon name="tasks" size={15} />
+        Create work order
+      </button>
+    </div>
+  );
+}
+
 function FallbackDetail({ d }: { d: any }) {
   return (
     <div style={{ padding: "20px 24px" }}>
@@ -228,7 +422,8 @@ export default function DetailDrawer({ detail, onClose }: DetailDrawerProps) {
           <div style={{ flex: 1, fontWeight: 700, fontSize: 13.5 }}>
             {shown?.type === "agent" ? "Agent Detail" :
              shown?.type === "project" ? "Grant Project" :
-             shown?.type === "report" ? "311 Report" : "Detail"}
+             shown?.type === "report" ? "311 Report" :
+             shown?.type === "asset" ? "Asset Detail" : "Detail"}
           </div>
           <button
             className="btn btn-ghost"
@@ -244,7 +439,8 @@ export default function DetailDrawer({ detail, onClose }: DetailDrawerProps) {
           {shown?.type === "agent"   && <AgentDetail d={shown} />}
           {shown?.type === "project" && <ProjectDetail d={shown} />}
           {shown?.type === "report"  && <ReportDetail d={shown} />}
-          {shown && !["agent","project","report"].includes(shown.type) && <FallbackDetail d={shown} />}
+          {shown?.type === "asset"   && <AssetDetail d={shown.data} />}
+          {shown && !["agent","project","report","asset"].includes(shown.type) && <FallbackDetail d={shown} />}
         </div>
       </div>
     </>

@@ -31,7 +31,25 @@ export default function Card({
           style={{ borderBottom: "1px solid var(--rule)" }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            {code && <span className="code">{code}</span>}
+            {code && (
+              <span
+                className="code"
+                style={{
+                  fontFamily: "var(--mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.13em",
+                  textTransform: "uppercase",
+                  color: "var(--ink-faint)",
+                  fontWeight: 500,
+                  background: "var(--surface-3)",
+                  border: "1px solid var(--rule)",
+                  borderRadius: "var(--r-sm)",
+                  padding: "2px 7px",
+                }}
+              >
+                {code}
+              </span>
+            )}
             {title && <span className="panel-title">{title}</span>}
           </div>
           {right && <div style={{ flexShrink: 0 }}>{right}</div>}

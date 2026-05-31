@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Screen from "@/components/ui/Screen"
 import ScreenHead from "@/components/ui/ScreenHead"
 import Spark from "@/components/ui/Spark"
@@ -12,6 +12,7 @@ import TimeBar from "@/components/ui/TimeBar"
 import CityMap from "@/components/map/CityMap"
 import Icon from "@/components/ui/Icon"
 import { KPIS, ALERTS, ACTIONS, PROJECTS, MAP_DOTS, MAP_HEAT } from "@/lib/data"
+import { dashboardApi } from "@/lib/api"
 import type { MapDot } from "@/lib/types"
 
 const STATUS_COLOR: Record<string, string> = {
@@ -92,7 +93,19 @@ function KpiTile({ kpi }: { kpi: (typeof KPIS)[0] }) {
 
 export default function Overview() {
   const [haz, setHaz] = useState<HazFilter>("All")
-  const topKpis = KPIS.filter(k => OVERVIEW_KPIS.includes(k.key))
+  const [liveKpis, setLiveKpis] = useState(KPIS)
+  const [liveAlerts, setLiveAlerts] = useState(ALERTS)
+
+  useEffect(() => {
+    dashboardApi.overview()
+      .then(res => {
+        if (res.data?.kpis) setLiveKpis(res.data.kpis)
+        if (res.data?.alerts) setLiveAlerts(res.data.alerts)
+      })
+      .catch(() => {}) // silent fail — keep static data
+  }, [])
+
+  const topKpis = liveKpis.filter(k => OVERVIEW_KPIS.includes(k.key))
 
   return (
     <Screen>
@@ -206,7 +219,7 @@ export default function Overview() {
             style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}
           >
             <div style={{ overflow: "auto", flex: 1 }}>
-              {ALERTS.map(alert => {
+              {liveAlerts.map(alert => {
                 const c = alert.sev === "Critical" ? "var(--red)" : alert.sev === "Elevated" ? "var(--amber)" : "var(--blue)"
                 return (
                   <div key={alert.id} style={{

@@ -30,13 +30,31 @@ interface PillProps {
   style?: CSSProperties;
 }
 
+function sevAriaLabel(sev?: string, children?: ReactNode): string {
+  const label = children ? String(children) : sev ?? "";
+  if (!sev) return label;
+  const urgency =
+    sev === "Critical" || sev === "High"
+      ? "high urgency"
+      : sev === "Elevated" || sev === "Medium" || sev === "Moderate"
+      ? "medium urgency"
+      : sev === "Watch"
+      ? "watch"
+      : sev === "OK"
+      ? "normal"
+      : "low urgency";
+  return `${label} — ${urgency}`;
+}
+
 export function Pill({ sev, children, className, style }: PillProps) {
   return (
     <span
       className={`pill ${sevClass(sev)}${className ? ` ${className}` : ""}`}
       style={style}
+      aria-label={sevAriaLabel(sev, children)}
+      role="status"
     >
-      <span className="dot" />
+      <span className="dot" aria-hidden="true" />
       {children ?? sev}
     </span>
   );

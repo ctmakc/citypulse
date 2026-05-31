@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/Icon";
+import { usePortalStore } from "@/lib/store";
 
 const NAV_GROUPS: [string, [string, string, number?][]][] = [
   ["Operations", [
@@ -64,6 +65,7 @@ function isActive(slug: string, currentPath: string): boolean {
 
 export default function Sidebar({ currentPath }: SidebarProps) {
   const router = useRouter();
+  const { currentUser } = usePortalStore();
 
   return (
     <nav
@@ -145,8 +147,34 @@ export default function Sidebar({ currentPath }: SidebarProps) {
         ))}
       </div>
 
+      {/* User profile */}
+      {currentUser && (
+        <div style={{
+          borderTop: "1px solid var(--rule)", padding: "10px 12px",
+          display: "flex", alignItems: "center", gap: 10,
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
+            background: "var(--blue)", color: "#fff",
+            display: "grid", placeItems: "center",
+            fontSize: 12, fontWeight: 700, flexShrink: 0,
+          }}>
+            {currentUser.initials}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 12.5, fontWeight: 600, color: "var(--ink)",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
+              {currentUser.name}
+            </div>
+            <div className="code" style={{ fontSize: 9 }}>{currentUser.role}</div>
+          </div>
+        </div>
+      )}
+
       {/* Settings separator */}
-      <div style={{ borderTop: "1px solid var(--rule)", margin: "8px 8px 0", paddingTop: 8 }}>
+      <div style={{ borderTop: "1px solid var(--rule)", margin: "0 8px 0", paddingTop: 8 }}>
         <div
           className={`nav-item${isActive("settings", currentPath) ? " active" : ""}`}
           onClick={() => router.push("/settings")}

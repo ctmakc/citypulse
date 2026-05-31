@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/Icon";
 import { usePortalStore } from "@/lib/store";
-import { ALERTS, ROLES, CITY } from "@/lib/data";
+import { ALERTS as STATIC_ALERTS, ROLES, CITY } from "@/lib/data";
+import { alertsApi } from "@/lib/api";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -25,10 +26,19 @@ function sevColor(sev: string) {
 export default function TopBar() {
   const router = useRouter();
   const isMobile = useIsMobile();
-  const { role, setRole, toggleAI, aiOpen, navOpen, setNavOpen } = usePortalStore();
+  const { role, setRole, toggleAI, aiOpen, navOpen, setNavOpen, currentUser } = usePortalStore();
 
   const [roleOpen, setRoleOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
+  const [liveAlerts, setLiveAlerts] = useState(STATIC_ALERTS);
+
+  useEffect(() => {
+    alertsApi.list()
+      .then(res => {
+        if (Array.isArray(res.data) && res.data.length > 0) setLiveAlerts(res.data);
+      })
+      .catch(() => {});
+  }, []);
 
   const roleRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -200,9 +210,9 @@ export default function TopBar() {
             }}>
               <div className="panel-head" style={{ borderBottom: "1px solid var(--rule)" }}>
                 <span className="panel-title">Notifications</span>
-                <span className="pill p-red"><span className="dot" />4 critical</span>
+                <span className="pill p-red"><span className="dot" />{liveAlerts.filter(a => a.sev === "Critical").length} critical</span>
               </div>
-              {ALERTS.map(a => (
+              {liveAlerts.map(a => (
                 <div key={a.id}
                   onClick={() => { setBellOpen(false); router.push(a.cat === "Wildfire" ? "/emergency" : "/digital-twin"); }}
                   style={{
@@ -243,14 +253,17 @@ export default function TopBar() {
           </div>
         </div>
 
-        {/* JR avatar */}
-        <div style={{
-          width: 36, height: 36, borderRadius: "50%",
-          background: "var(--blue)", color: "#fff",
-          display: "grid", placeItems: "center",
-          fontSize: 12, fontWeight: 700, flexShrink: 0, cursor: "pointer",
-        }}>
-          JR
+        {/* User avatar */}
+        <div
+          title={currentUser?.name ?? "Jordan Rivera"}
+          style={{
+            width: 36, height: 36, borderRadius: "50%",
+            background: "var(--blue)", color: "#fff",
+            display: "grid", placeItems: "center",
+            fontSize: 12, fontWeight: 700, flexShrink: 0, cursor: "pointer",
+          }}
+        >
+          {currentUser?.initials ?? "JR"}
         </div>
       </div>
     </div>

@@ -32,8 +32,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${spectral.variable} ${archivo.variable} ${ibmPlexMono.variable}`}>
-      <body style={{ height: "100vh", overflow: "hidden" }}>{children}</body>
+    <html lang="en">
+      <body className={`${spectral.variable} ${archivo.variable} ${ibmPlexMono.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }

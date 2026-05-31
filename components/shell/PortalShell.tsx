@@ -8,6 +8,8 @@ import AssistantDock from "@/components/shell/AssistantDock";
 import DetailDrawer from "@/components/shell/DetailDrawer";
 import AssetPanel from "@/components/shell/AssetPanel";
 import Icon from "@/components/ui/Icon";
+import Toast from "@/components/ui/Toast";
+import { authApi } from "@/lib/api";
 
 const BOTTOM_TABS: [string, string, string][] = [
   ["overview", "Overview", "overview"],
@@ -27,12 +29,47 @@ function useIsMobile() {
   return isMobile;
 }
 
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join("");
+}
+
 export default function PortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isMobile = useIsMobile();
 
-  const { aiOpen, setAIOpen, picked, setPicked, detail, setDetail, navOpen, setNavOpen } = usePortalStore();
+  const { aiOpen, setAIOpen, picked, setPicked, detail, setDetail, navOpen, setNavOpen, setCurrentUser, role } = usePortalStore();
+
+  // Attempt to load current user from /auth/me on mount
+  useEffect(() => {
+    authApi.me()
+      .then((res) => {
+        const data = res.data?.user ?? res.data;
+        if (data?.name) {
+          setCurrentUser({
+            name: data.name,
+            email: data.email ?? "",
+            role: data.role ?? role,
+            initials: getInitials(data.name),
+          });
+        }
+      })
+      .catch(() => {
+        // Not authenticated or API unavailable — fall back to default placeholder
+        setCurrentUser({
+          name: "Jordan Rivera",
+          email: "j.rivera@meridian.gov",
+          role: role,
+          initials: "JR",
+        });
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
@@ -155,6 +192,9 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
       {/* Detail drawer */}
       <DetailDrawer detail={detail} onClose={() => setDetail(null)} />
+
+      {/* Global toast notifications */}
+      <Toast />
 
       {/* Mobile bottom tabs */}
       {isMobile && (
