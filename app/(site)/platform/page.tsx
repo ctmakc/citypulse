@@ -7,6 +7,8 @@ export default function PlatformPage() {
       {/* ===== STICKY HEADER ===== */}
       <SiteHeader />
 
+      <main id="main-content">
+
       {/* ===== HERO ===== */}
       <section style={{
         background: 'var(--paper)',
@@ -75,7 +77,7 @@ export default function PlatformPage() {
             Full interactive map of your territory. Every road, bridge, pipe, sensor, incident and risk — layered, filterable and time-navigable.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'start' }}>
+          <div className="two-col" style={{ gap: 48, alignItems: 'start' }}>
             {/* Feature list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {[
@@ -265,11 +267,7 @@ export default function PlatformPage() {
             </div>
 
             {/* Agents grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(9, 1fr)',
-              gap: 8,
-            }}>
+            <div className="agents-grid" style={{ gap: 8 }}>
               {[
                 { label: 'Road', icon: '🛣', color: 'var(--slate)', wash: 'var(--slate-wash)' },
                 { label: 'Water', icon: '💧', color: 'var(--blue)', wash: 'var(--blue-wash)' },
@@ -335,9 +333,7 @@ export default function PlatformPage() {
           </p>
 
           {/* Pipeline steps */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(6, 1fr)',
+          <div className="pipeline-grid" style={{
             gap: 0,
             background: 'var(--surface)', border: '1px solid var(--rule)',
             borderRadius: 'var(--r-xl)', overflow: 'hidden',
@@ -358,7 +354,7 @@ export default function PlatformPage() {
               }}>
                 {/* Arrow connector */}
                 {i < 5 && (
-                  <div style={{
+                  <div className="pipe-arrow" style={{
                     position: 'absolute', right: -12, top: '50%',
                     transform: 'translateY(-50%)',
                     width: 24, height: 24,
@@ -460,8 +456,7 @@ export default function PlatformPage() {
                 ],
               },
             ].map((mod, i) => (
-              <div key={mod.title} style={{
-                display: 'grid', gridTemplateColumns: '1fr 2fr',
+              <div key={mod.title} className="two-col-13" style={{
                 gap: 40, padding: '40px 36px',
                 background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface-2)',
                 border: '1px solid var(--rule)',
@@ -554,6 +549,8 @@ export default function PlatformPage() {
           </div>
         </div>
       </section>
+
+      </main>
 
       {/* ===== FOOTER ===== */}
       <SiteFooter />

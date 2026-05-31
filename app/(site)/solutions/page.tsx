@@ -139,6 +139,8 @@ export default function SolutionsPage() {
     <>
       <SiteHeader />
 
+      <main id="main-content">
+
       {/* ── Hero ────────────────────────────────────────────────────── */}
       <section
         style={{
@@ -392,6 +394,8 @@ export default function SolutionsPage() {
           </Link>
         </div>
       </section>
+
+      </main>
 
       {/* ── Footer ──────────────────────────────────────────────────── */}
       <SiteFooter />

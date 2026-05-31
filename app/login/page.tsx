@@ -70,8 +70,9 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label className="cap" style={{ display: 'block', marginBottom: 6, fontSize: 10 }}>Email</label>
+              <label htmlFor="login-email" className="cap" style={{ display: 'block', marginBottom: 6, fontSize: 10 }}>Email</label>
               <input
+                id="login-email" name="email" autoComplete="email"
                 type="email" value={email} onChange={e => setEmail(e.target.value)} required
                 style={{
                   width: '100%', height: 42, padding: '0 14px',
@@ -82,8 +83,9 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="cap" style={{ display: 'block', marginBottom: 6, fontSize: 10 }}>Password</label>
+              <label htmlFor="login-password" className="cap" style={{ display: 'block', marginBottom: 6, fontSize: 10 }}>Password</label>
               <input
+                id="login-password" name="password" autoComplete="current-password"
                 type="password" value={password} onChange={e => setPassword(e.target.value)} required
                 style={{
                   width: '100%', height: 42, padding: '0 14px',

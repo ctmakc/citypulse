@@ -128,7 +128,10 @@ function drawOverlays(
         <div style="width:${size}px;height:${size}px;border-radius:50%;background:${d.color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>
       </div>`
     const icon = L.divIcon({ html, className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2] })
-    const marker = L.marker([lat, lng], { icon })
+    // Accessible name for the keyboard-focusable marker (Leaflet renders it as
+    // role="button"). `title`/`alt` give it a name so axe `aria-command-name` passes.
+    const markerName = d.label || d.tag || 'Map location marker'
+    const marker = L.marker([lat, lng], { icon, title: markerName, alt: markerName, keyboard: true })
     if (d.label || d.tag) marker.bindTooltip(d.label || d.tag || '', { permanent: false, direction: 'top' })
     if (onPickRef.current) marker.on('click', () => onPickRef.current!(d))
     marker.addTo(overlay)

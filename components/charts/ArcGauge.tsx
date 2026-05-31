@@ -31,12 +31,22 @@ export default function ArcGauge({
   const arcLen = circ * arcFraction;
   const fillLen = pct * arcLen;
 
+  const severity =
+    pct > 0.7 ? "critical" : pct > 0.45 ? "elevated" : "normal";
+  const ariaLabel = `${label ? `${label}: ` : ""}${Math.round(value)} of ${max}, ${severity}`;
+
   // Convert to SVG strokeDasharray on a full circle
   // We rotate the whole SVG 140deg so the arc starts at bottom-left
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-      <svg width={size} height={size} style={{ display: "block", overflow: "visible" }}>
+      <svg
+        width={size}
+        height={size}
+        style={{ display: "block", overflow: "visible" }}
+        role="img"
+        aria-label={ariaLabel}
+      >
         <g style={{ transform: `rotate(${startAngle}deg)`, transformOrigin: `${cx}px ${cy}px` }}>
           {/* Track */}
           <circle

@@ -11,7 +11,8 @@
   --surface-3: #F6F3EC;
   --ink:       #2A3037;
   --ink-soft:  #5A626B;
-  --ink-faint: #939AA1;
+  /* --ink-faint darkened from #939AA1 → meets WCAG AA (4.5:1) on paper/white/wash surfaces */
+  --ink-faint: #5F666E;
   --ink-ghost: #B7BCC0;
 
   --rule:      #E8E3D8;
@@ -19,8 +20,8 @@
 
   /* ---- Accents ---- */
   --blue:   #2A6C92;  --blue-wash:  #E8EFF4;  --blue-soft:  #4D86A8;
-  --green:  #2C7A52;  --green-wash: #E6F0E8;
-  --amber:  #BC7E15;  --amber-wash: #F6EDD8;
+  --green:  #28714D;  --green-wash: #E6F0E8;
+  --amber:  #8F5F0D;  --amber-wash: #F6EDD8;
   --red:    #B23A33;  --red-wash:   #F4E2DF;
   --slate:  #5E6973;  --slate-wash: #ECE8DE;
 
@@ -154,4 +155,108 @@ button { font-family: var(--grotesk); }
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+
+/* ============================================================
+   A11Y — focus-visible (keyboard users only, mouse keeps clean UI)
+   ============================================================ */
+*:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+/* Explicit, clearer ring for the interactive primitives */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--blue-wash);
+}
+/* Never show a focus ring for plain mouse clicks */
+:focus:not(:focus-visible) { outline: none; }
+
+/* ============================================================
+   A11Y — skip link (visually hidden until focused)
+   Referenced by the portal shell + SiteHeader (className="skip-link")
+   ============================================================ */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1000;
+  padding: 10px 16px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-3);
+  font-family: var(--grotesk);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  left: 12px;
+  top: 12px;
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Responsive grid utilities — multi-col on desktop, 1-col < 760px.
+   Promo pages are inline-styled; apply these classNames on the grid
+   wrappers and DROP the inline `display` / `gridTemplateColumns` so the
+   class wins (inline styles otherwise override). Keep `gap` inline.
+   ============================================================ */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; }
+.two-col-13 { display: grid; grid-template-columns: 1fr 2fr; }
+.contact-grid { display: grid; grid-template-columns: 55fr 45fr; }
+.agents-grid { display: grid; grid-template-columns: repeat(9, 1fr); }
+.pipeline-grid { display: grid; grid-template-columns: repeat(6, 1fr); }
+.hero-grid { display: flex; flex-direction: row; }
+
+@media (max-width: 760px) {
+  .grid-2,
+  .grid-3,
+  .two-col,
+  .two-col-13,
+  .contact-grid,
+  .pipeline-grid { grid-template-columns: 1fr; }
+  /* 9 domain agents → a tidy 3×3 instead of a 1px-wide column */
+  .agents-grid { grid-template-columns: repeat(3, 1fr); }
+  .hero-grid { flex-direction: column; }
+  /* horizontal pipeline arrows make no sense once stacked */
+  .pipe-arrow { display: none !important; }
+}
+
+/* On the very narrowest phones, drop the 4-up metrics strip to 2-up */
+@media (max-width: 760px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 460px) {
+  .grid-4 { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   prefers-reduced-motion — kill shimmer / pulse / entrance motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .lift:hover { transform: none !important; }
 }

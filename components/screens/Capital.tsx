@@ -1,13 +1,42 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Screen from "@/components/ui/Screen"
 import ScreenHead from "@/components/ui/ScreenHead"
 import Stat from "@/components/ui/Stat"
 import Pill from "@/components/ui/Pill"
 import Donut from "@/components/ui/Donut"
 import Icon from "@/components/ui/Icon"
+import EmptyState from "@/components/ui/EmptyState"
+import Skeleton from "@/components/ui/Skeleton"
 import { PROJECTS } from "@/lib/data"
+import { capitalApi, isLoggedIn } from "@/lib/api"
 import { usePortalStore } from "@/lib/store"
+import type { Project } from "@/lib/types"
+
+// Skeleton shaped like a project card, shown during in-flight fetch
+function ProjectCardSkeleton() {
+  return (
+    <div className="surface" style={{ padding: 0, overflow: "hidden" }} aria-hidden="true">
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "14px 20px 12px", borderBottom: "1px solid var(--rule-soft)", background: "var(--surface-2)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Skeleton w={60} h={12} />
+          <Skeleton w={70} h={18} rounded />
+          <Skeleton w={80} h={18} rounded />
+        </div>
+        <Skeleton w={44} h={44} rounded />
+      </div>
+      <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <Skeleton w="70%" h={18} />
+        <Skeleton w="90%" h={12} />
+        <Skeleton w="55%" h={12} />
+      </div>
+    </div>
+  )
+}
 
 const SCORE_COLOR: Record<string, string> = {
   High: "var(--green)",
@@ -30,8 +59,23 @@ const URGENCY_DONUT_COLOR: Record<string, string> = {
 
 export default function Capital() {
   const setDetail = usePortalStore((s) => s.setDetail)
+  const [projects, setProjects] = useState<Project[]>(PROJECTS)
+  // Skeletons only while an authenticated fetch is in flight; demo shows static data instantly.
+  const [loading, setLoading] = useState(() => isLoggedIn())
 
-  const totalCost = PROJECTS.reduce((sum, p) => {
+  useEffect(() => {
+    if (!isLoggedIn()) return
+    setLoading(true)
+    capitalApi.list()
+      .then((res) => {
+        if (Array.isArray(res.data)) setProjects(res.data as Project[])
+        else if (Array.isArray(res.data?.projects)) setProjects(res.data.projects as Project[])
+      })
+      .catch(() => {}) // silent fail — keep static data
+      .finally(() => setLoading(false))
+  }, [])
+
+  const totalCost = projects.reduce((sum, p) => {
     const num = parseFloat(p.cost.replace("$", "").replace("M", ""))
     return sum + num
   }, 0)
@@ -46,14 +90,18 @@ export default function Capital() {
 
       {/* Summary stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-        <Stat label="Grant-eligible projects" value={PROJECTS.length} sub="AI-identified" c="var(--blue)" />
+        <Stat label="Grant-eligible projects" value={projects.length} sub="AI-identified" c="var(--blue)" />
         <Stat label="Total pipeline" value={`$${totalCost.toFixed(1)}M`} sub="estimated project cost" c="var(--green)" />
         <Stat label="Nearest deadline" value="Jun 28" sub="CP-118 · State Water Fund" c="var(--amber)" />
       </div>
 
       {/* Project cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {PROJECTS.map((proj) => (
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }} aria-busy={loading}>
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => <ProjectCardSkeleton key={i} />)
+        ) : projects.length === 0 ? (
+          <EmptyState title="No matching records" sub="Try adjusting your filters" />
+        ) : projects.map((proj) => (
           <div
             key={proj.id}
             className="surface lift"

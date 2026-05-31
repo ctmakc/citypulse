@@ -7,7 +7,7 @@ const INK = '#2A3037';
 const PAPER = '#F3F0E8';
 const RULE = '#E8E3D8';
 const INK_SOFT = '#5A626B';
-const INK_FAINT = '#939AA1';
+const INK_FAINT = '#5F666E'; // WCAG AA: was #939AA1 (failed 4.5:1)
 const SURFACE = '#FFFFFF';
 const SURFACE_2 = '#FBF9F4';
 const BLUE = '#2A6C92';
@@ -300,8 +300,8 @@ function AppWindowMockup() {
           <div style={statRowStyle}>
             <div style={statCardStyle}>
               <div style={{ fontSize: 9, color: INK_FAINT, fontFamily: mono, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Risk Index</div>
-              <div style={{ fontSize: 15, fontWeight: 700, fontFamily: serif, color: '#BC7E15', lineHeight: 1.2 }}>62</div>
-              <div style={{ fontSize: 9, color: '#BC7E15', fontWeight: 600 }}>Elevated</div>
+              <div style={{ fontSize: 15, fontWeight: 700, fontFamily: serif, color: '#8F5F0D', lineHeight: 1.2 }}>62</div>
+              <div style={{ fontSize: 9, color: '#8F5F0D', fontWeight: 600 }}>Elevated</div>
             </div>
             <div style={statCardStyle}>
               <div style={{ fontSize: 9, color: INK_FAINT, fontFamily: mono, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Alerts</div>
@@ -439,28 +439,28 @@ export default function HomePage() {
         *{box-sizing:border-box;margin:0;padding:0;}
         body{font-family:"Archivo",-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;}
         a{text-decoration:none;color:inherit;}
-        @media(max-width:768px){
-          .hero-grid-inner{flex-direction:column!important;}
+        /* Section grids (.hero-grid/.grid-3/.grid-4) collapse via global utilities.
+           Mobile-only tweaks that aren't grid utilities live here. */
+        @media(max-width:760px){
           .hero-mockup{display:none!important;}
-          .modules-grid{grid-template-columns:1fr!important;}
-          .security-grid{grid-template-columns:1fr!important;}
-          .metrics-grid{grid-template-columns:repeat(2,1fr)!important;}
-          .ft-grid-inner{grid-template-columns:1fr!important;}
+          .hero-copy h1{font-size:clamp(28px,8vw,34px)!important;}
         }
       `}</style>
 
       {/* ━━━━━━━━━━━━━━ 1. HEADER ━━━━━━━━━━━━━━ */}
       <SiteHeader />
 
+      <main id="main-content">{/* ── semantic landmark for promo content ── */}
+
       {/* ━━━━━━━━━━━━━━ 2. HERO ━━━━━━━━━━━━━━ */}
       <section style={{ ...sectionPad, paddingTop: 72, paddingBottom: 80, background: PAPER }}>
         <div style={{ ...wrap }}>
           <div
-            className="hero-grid-inner"
-            style={{ display: 'flex', alignItems: 'center', gap: 60 }}
+            className="hero-grid"
+            style={{ alignItems: 'center', gap: 60 }}
           >
             {/* Left copy */}
-            <div style={{ flex: '1 1 480px', minWidth: 0 }}>
+            <div className="hero-copy" style={{ flex: '1 1 480px', minWidth: 0 }}>
               <div style={{ ...codeStyle, marginBottom: 18 }}>Civic Infrastructure Intelligence</div>
               <h1 style={{
                 fontFamily: serif,
@@ -561,8 +561,8 @@ export default function HomePage() {
             </p>
           </div>
           <div
-            className="modules-grid"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}
+            className="grid-3"
+            style={{ gap: 16 }}
           >
             {modules.map((m) => (
               <ModuleCard key={m.title} {...m} />
@@ -575,14 +575,14 @@ export default function HomePage() {
       <section style={{ ...sectionPad, background: DARK_BG }}>
         <div style={wrap}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
-            <div style={{ ...codeStyle, color: '#5A626B', marginBottom: 14 }}>Example impact</div>
+            <div style={{ ...codeStyle, color: 'rgba(255,255,255,0.6)', marginBottom: 14 }}>Example impact</div>
             <h2 style={{ fontFamily: serif, fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 600, color: '#fff', letterSpacing: '-0.02em' }}>
               Measurable outcomes for a mid-size city.
             </h2>
           </div>
           <div
-            className="metrics-grid"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}
+            className="grid-4"
+            style={{ gap: 2 }}
           >
             {metrics.map((m, i) => (
               <div key={i} style={{
@@ -615,8 +615,8 @@ export default function HomePage() {
             </p>
           </div>
           <div
-            className="security-grid"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}
+            className="grid-3"
+            style={{ gap: 24 }}
           >
             {securityCols.map((col, ci) => (
               <div key={ci} style={{
@@ -682,6 +682,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      </main>
 
       {/* ━━━━━━━━━━━━━━ 8. FOOTER ━━━━━━━━━━━━━━ */}
       <SiteFooter />

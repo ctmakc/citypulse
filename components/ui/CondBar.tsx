@@ -8,9 +8,14 @@ export default function CondBar({ v }: CondBarProps) {
   const pct = Math.max(0, Math.min(100, v));
   const color =
     pct >= 75 ? "var(--green)" : pct >= 55 ? "var(--amber)" : "var(--red)";
+  const rating = pct >= 75 ? "good" : pct >= 55 ? "fair" : "critical";
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div
+      style={{ display: "flex", alignItems: "center", gap: 8 }}
+      role="img"
+      aria-label={`Condition ${pct} of 100, ${rating}`}
+    >
       <div
         style={{
           width: 64,
@@ -20,6 +25,7 @@ export default function CondBar({ v }: CondBarProps) {
           overflow: "hidden",
           flexShrink: 0,
         }}
+        aria-hidden="true"
       >
         <div
           style={{

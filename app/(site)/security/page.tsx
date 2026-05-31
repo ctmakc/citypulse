@@ -122,6 +122,8 @@ export default function SecurityPage() {
     <>
       <SiteHeader />
 
+      <main id="main-content">
+
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section
         style={{
@@ -206,11 +208,8 @@ export default function SecurityPage() {
       {/* ── Security pillars ─────────────────────────────────────────── */}
       <section style={{ maxWidth: 1140, margin: '0 auto', padding: '0 28px 80px' }}>
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(460px, 1fr))',
-            gap: 16,
-          }}
+          className="grid-2"
+          style={{ gap: 16 }}
         >
           {pillars.map((p, i) => (
             <div
@@ -342,12 +341,8 @@ export default function SecurityPage() {
       {/* ── Incident response ────────────────────────────────────────── */}
       <section style={{ maxWidth: 1140, margin: '0 auto', padding: '72px 28px 80px' }}>
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 48,
-            alignItems: 'start',
-          }}
+          className="two-col"
+          style={{ gap: 48, alignItems: 'start' }}
         >
           {/* Left — copy */}
           <div>
@@ -562,6 +557,8 @@ export default function SecurityPage() {
           </div>
         </div>
       </section>
+
+      </main>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
       <SiteFooter />

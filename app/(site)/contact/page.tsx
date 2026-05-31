@@ -5,9 +5,9 @@ import SiteHeader from '@/components/site/SiteHeader'
 import SiteFooter from '@/components/site/SiteFooter'
 
 /* ---------- Small reusable styled field wrappers ---------- */
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
   return (
-    <label style={{
+    <label htmlFor={htmlFor} style={{
       display: 'block',
       marginBottom: 6,
       fontSize: 10.5,
@@ -37,17 +37,19 @@ const inputBase: React.CSSProperties = {
 }
 
 function Field({
+  htmlFor,
   label,
   required,
   children,
 }: {
+  htmlFor: string
   label: string
   required?: boolean
   children: React.ReactNode
 }) {
   return (
     <div>
-      <FieldLabel>
+      <FieldLabel htmlFor={htmlFor}>
         {label}
         {required && <span style={{ color: 'var(--red)', marginLeft: 3 }}>*</span>}
       </FieldLabel>
@@ -133,10 +135,12 @@ export default function ContactPage() {
     <div style={{ fontFamily: 'var(--grotesk)', minHeight: '100vh', background: 'var(--paper)', overflow: 'auto' }}>
       <SiteHeader />
 
+      <main id="main-content">
+
       {/* ---- Page hero strip ---- */}
       <div style={{ background: 'var(--ink)', padding: '56px 28px 52px' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.4)', marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.66)', marginBottom: 14 }}>
             Request a pilot
           </div>
           <h1 className="serif" style={{ fontSize: 36, fontWeight: 600, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.15, margin: 0 }}>
@@ -150,9 +154,7 @@ export default function ContactPage() {
 
       {/* ---- 2-col body ---- */}
       <div style={{ maxWidth: 1180, margin: '0 auto', padding: '48px 28px 0' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '55fr 45fr',
+        <div className="contact-grid" style={{
           gap: 48,
           alignItems: 'start',
         }}>
@@ -177,17 +179,21 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
                   {/* Row 1: First + Last name */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <Field label="First name" required>
+                  <div className="two-col" style={{ gap: 16 }}>
+                    <Field htmlFor="firstName" label="First name" required>
                       <input
+                        id="firstName" name="firstName"
                         type="text" required placeholder="Jordan"
+                        autoComplete="given-name"
                         style={inputBase}
                         onFocus={onFocusEl} onBlur={onBlurEl}
                       />
                     </Field>
-                    <Field label="Last name" required>
+                    <Field htmlFor="lastName" label="Last name" required>
                       <input
+                        id="lastName" name="lastName"
                         type="text" required placeholder="Rivera"
+                        autoComplete="family-name"
                         style={inputBase}
                         onFocus={onFocusEl} onBlur={onBlurEl}
                       />
@@ -195,35 +201,42 @@ export default function ContactPage() {
                   </div>
 
                   {/* Email */}
-                  <Field label="Email address" required>
+                  <Field htmlFor="email" label="Email address" required>
                     <input
+                      id="email" name="email"
                       type="email" required placeholder="jrivera@meridian.gov"
+                      autoComplete="email"
                       style={inputBase}
                       onFocus={onFocusEl} onBlur={onBlurEl}
                     />
                   </Field>
 
                   {/* Phone */}
-                  <Field label="Phone number">
+                  <Field htmlFor="phone" label="Phone number">
                     <input
+                      id="phone" name="phone"
                       type="tel" placeholder="+1 (555) 000-0000"
+                      autoComplete="tel"
                       style={inputBase}
                       onFocus={onFocusEl} onBlur={onBlurEl}
                     />
                   </Field>
 
                   {/* Organization */}
-                  <Field label="Organization / City name" required>
+                  <Field htmlFor="organization" label="Organization / City name" required>
                     <input
+                      id="organization" name="organization"
                       type="text" required placeholder="City of Meridian"
+                      autoComplete="organization"
                       style={inputBase}
                       onFocus={onFocusEl} onBlur={onBlurEl}
                     />
                   </Field>
 
                   {/* Your role */}
-                  <Field label="Your role">
+                  <Field htmlFor="role" label="Your role">
                     <select
+                      id="role" name="role"
                       style={{ ...inputBase, cursor: 'pointer', appearance: 'none', backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23939AA1' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: 36 }}
                       onFocus={onFocusEl} onBlur={onBlurEl}
                     >
@@ -242,8 +255,9 @@ export default function ContactPage() {
                   </Field>
 
                   {/* City/region type */}
-                  <Field label="City / region type">
+                  <Field htmlFor="regionType" label="City / region type">
                     <select
+                      id="regionType" name="regionType"
                       style={{ ...inputBase, cursor: 'pointer', appearance: 'none', backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23939AA1' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: 36 }}
                       onFocus={onFocusEl} onBlur={onBlurEl}
                     >
@@ -260,8 +274,9 @@ export default function ContactPage() {
                   </Field>
 
                   {/* Population */}
-                  <Field label="Population">
+                  <Field htmlFor="population" label="Population">
                     <select
+                      id="population" name="population"
                       style={{ ...inputBase, cursor: 'pointer', appearance: 'none', backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23939AA1' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: 36 }}
                       onFocus={onFocusEl} onBlur={onBlurEl}
                     >
@@ -275,9 +290,19 @@ export default function ContactPage() {
                   </Field>
 
                   {/* Challenges checkboxes */}
-                  <div>
-                    <FieldLabel>Which challenges interest you most?</FieldLabel>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', marginTop: 4 }}>
+                  <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+                    <legend style={{
+                      padding: 0,
+                      marginBottom: 6,
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: 'var(--ink-soft)',
+                    }}>
+                      Which challenges interest you most?
+                    </legend>
+                    <div className="two-col" style={{ gap: '10px 24px', marginTop: 4 }}>
                       {CHALLENGES.map(c => (
                         <CheckItem
                           key={c}
@@ -288,11 +313,12 @@ export default function ContactPage() {
                         />
                       ))}
                     </div>
-                  </div>
+                  </fieldset>
 
                   {/* Tell us more */}
-                  <Field label="Tell us more (optional)">
+                  <Field htmlFor="details" label="Tell us more (optional)">
                     <textarea
+                      id="details" name="details"
                       rows={4}
                       placeholder="e.g. We need to prioritize aging water mains and assemble a grant application before the summer deadline."
                       style={{
@@ -518,6 +544,8 @@ export default function ContactPage() {
 
         </div>
       </div>
+
+      </main>
 
       <SiteFooter />
     </div>

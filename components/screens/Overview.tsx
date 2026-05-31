@@ -11,8 +11,9 @@ import Donut from "@/components/ui/Donut"
 import TimeBar from "@/components/ui/TimeBar"
 import CityMap from "@/components/map/CityMap"
 import Icon from "@/components/ui/Icon"
+import Skeleton from "@/components/ui/Skeleton"
 import { KPIS, ALERTS, ACTIONS, PROJECTS, MAP_DOTS, MAP_HEAT } from "@/lib/data"
-import { dashboardApi } from "@/lib/api"
+import { dashboardApi, isLoggedIn } from "@/lib/api"
 import type { MapDot } from "@/lib/types"
 
 const STATUS_COLOR: Record<string, string> = {
@@ -91,18 +92,41 @@ function KpiTile({ kpi }: { kpi: (typeof KPIS)[0] }) {
   )
 }
 
+// KPI skeleton tile — same shape/padding as KpiTile, shown during in-flight fetch
+function KpiTileSkeleton() {
+  return (
+    <div className="surface" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Skeleton w={70} h={9} />
+        <Skeleton w={24} h={9} />
+      </div>
+      <div style={{ marginTop: 11 }}><Skeleton w="55%" h={26} /></div>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginTop: 10 }}>
+        <Skeleton w={64} h={10} />
+        <Skeleton w={44} h={16} />
+      </div>
+    </div>
+  )
+}
+
 export default function Overview() {
   const [haz, setHaz] = useState<HazFilter>("All")
   const [liveKpis, setLiveKpis] = useState(KPIS)
   const [liveAlerts, setLiveAlerts] = useState(ALERTS)
+  // Only show skeletons when an authenticated fetch is genuinely in flight.
+  // Logged-out demo keeps static data and never flashes a skeleton.
+  const [loading, setLoading] = useState(() => isLoggedIn())
 
   useEffect(() => {
+    if (!isLoggedIn()) return
+    setLoading(true)
     dashboardApi.overview()
       .then(res => {
         if (res.data?.kpis) setLiveKpis(res.data.kpis)
         if (res.data?.alerts) setLiveAlerts(res.data.alerts)
       })
       .catch(() => {}) // silent fail — keep static data
+      .finally(() => setLoading(false))
   }, [])
 
   const topKpis = liveKpis.filter(k => OVERVIEW_KPIS.includes(k.key))
@@ -127,8 +151,10 @@ export default function Overview() {
       />
 
       {/* 5 KPI tiles */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
-        {topKpis.map(kpi => <KpiTile key={kpi.key} kpi={kpi} />)}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }} aria-busy={loading}>
+        {loading
+          ? Array.from({ length: 5 }).map((_, i) => <KpiTileSkeleton key={i} />)
+          : topKpis.map(kpi => <KpiTile key={kpi.key} kpi={kpi} />)}
       </div>
 
       {/* Main split: 1.7fr map + 1fr right column */}
@@ -218,8 +244,22 @@ export default function Overview() {
             title="Active Alerts"
             style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}
           >
-            <div style={{ overflow: "auto", flex: 1 }}>
-              {liveAlerts.map(alert => {
+            <div style={{ overflow: "auto", flex: 1 }} aria-busy={loading}>
+              {loading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} style={{
+                      display: "flex", gap: 10, alignItems: "flex-start",
+                      padding: "10px 0", borderBottom: "1px solid var(--rule-soft)",
+                    }}>
+                      <Skeleton w={8} h={8} rounded />
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                        <Skeleton w={90} h={11} rounded />
+                        <Skeleton w="85%" h={12} />
+                        <Skeleton w="55%" h={10} />
+                      </div>
+                    </div>
+                  ))
+                : liveAlerts.map(alert => {
                 const c = alert.sev === "Critical" ? "var(--red)" : alert.sev === "Elevated" ? "var(--amber)" : "var(--blue)"
                 return (
                   <div key={alert.id} style={{
@@ -233,7 +273,7 @@ export default function Overview() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", gap: 7, alignItems: "center", marginBottom: 2 }}>
                         <Pill sev={alert.sev} />
-                        <span className="code" style={{ color: "var(--ink-ghost)", fontSize: 9 }}>{alert.id}</span>
+                        <span className="code" style={{ color: "var(--ink-faint)", fontSize: 9 }}>{alert.id}</span>
                       </div>
                       <div style={{ fontSize: 12.5, fontWeight: 500, lineHeight: 1.4 }}>{alert.title}</div>
                       <div style={{ fontSize: 11, color: "var(--ink-faint)", marginTop: 2 }}>

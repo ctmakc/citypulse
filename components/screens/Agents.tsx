@@ -1,11 +1,14 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Screen from "@/components/ui/Screen"
 import ScreenHead from "@/components/ui/ScreenHead"
 import Pill from "@/components/ui/Pill"
 import Donut from "@/components/ui/Donut"
-import Icon, { ICONS } from "@/components/ui/Icon"
+import Icon from "@/components/ui/Icon"
+import Skeleton from "@/components/ui/Skeleton"
 import { AGENTS, BRIEFING } from "@/lib/data"
+import { agentsApi, isLoggedIn } from "@/lib/api"
 import { usePortalStore } from "@/lib/store"
 import { SEV_COLOR } from "@/components/ui/Pill"
 import type { Agent } from "@/lib/types"
@@ -84,7 +87,50 @@ function AgentCard({ agent }: { agent: Agent }) {
   )
 }
 
+// Skeleton shaped like an AgentCard, shown during in-flight fetch
+function AgentCardSkeleton() {
+  return (
+    <div className="surface" style={{ display: "flex", flexDirection: "column", overflow: "hidden" }} aria-hidden="true">
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "14px 16px 12px", borderBottom: "1px solid var(--rule-soft)",
+      }}>
+        <Skeleton w={34} h={34} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <Skeleton w="60%" h={13} />
+          <Skeleton w="40%" h={9} />
+        </div>
+        <Skeleton w={64} h={18} rounded />
+      </div>
+      <div style={{ padding: "13px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+        <Skeleton w="100%" h={12} />
+        <Skeleton w="85%" h={12} />
+        <div style={{ display: "flex", gap: 5 }}>
+          <Skeleton w={60} h={16} rounded />
+          <Skeleton w={70} h={16} rounded />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Agents() {
+  const [agents, setAgents] = useState<Agent[]>(AGENTS)
+  // Skeletons only while an authenticated fetch is in flight; demo shows static data instantly.
+  const [loading, setLoading] = useState(() => isLoggedIn())
+
+  useEffect(() => {
+    if (!isLoggedIn()) return
+    setLoading(true)
+    agentsApi.all()
+      .then((res) => {
+        if (Array.isArray(res.data)) setAgents(res.data as Agent[])
+        else if (Array.isArray(res.data?.agents)) setAgents(res.data.agents as Agent[])
+      })
+      .catch(() => {}) // silent fail — keep static data
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <Screen>
       <ScreenHead
@@ -198,8 +244,10 @@ export default function Agents() {
 
       {/* Agent cards grid */}
       <div className="cap" style={{ marginTop: 4 }}>Specialized agents</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        {AGENTS.map(agent => <AgentCard key={agent.key} agent={agent} />)}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }} aria-busy={loading}>
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => <AgentCardSkeleton key={i} />)
+          : agents.map(agent => <AgentCard key={agent.key} agent={agent} />)}
       </div>
     </Screen>
   )

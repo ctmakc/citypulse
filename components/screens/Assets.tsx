@@ -1,13 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Screen from "@/components/ui/Screen"
 import ScreenHead from "@/components/ui/ScreenHead"
 import Pill from "@/components/ui/Pill"
 import CondBar from "@/components/ui/CondBar"
+import EmptyState from "@/components/ui/EmptyState"
+import { SkeletonRow } from "@/components/ui/Skeleton"
 import { ASSETS } from "@/lib/data"
+import { assetsApi, isLoggedIn } from "@/lib/api"
 import { usePortalStore } from "@/lib/store"
 import type { Asset } from "@/lib/types"
+
+const GRID = "100px 130px 1.4fr 1fr 160px 110px 160px 100px"
 
 const RISK_LEVELS = ["All", "Critical", "Elevated", "Watch", "OK"] as const
 const ASSET_TYPES = ["All", "Bridge", "Road", "Water", "Hydrant", "Streetlight", "Signal", "Pump", "Building"] as const
@@ -29,8 +34,23 @@ export default function Assets() {
   const [riskFilter, setRiskFilter] = useState<string>("All")
   const [typeFilter, setTypeFilter] = useState<string>("All")
   const [districtFilter, setDistrictFilter] = useState<string>("All")
+  const [assets, setAssets] = useState<Asset[]>(ASSETS)
+  // Skeletons only while an authenticated fetch is in flight; demo shows static data instantly.
+  const [loading, setLoading] = useState(() => isLoggedIn())
 
-  const filtered = ASSETS.filter((a) => {
+  useEffect(() => {
+    if (!isLoggedIn()) return
+    setLoading(true)
+    assetsApi.list()
+      .then((res) => {
+        if (Array.isArray(res.data)) setAssets(res.data as Asset[])
+        else if (Array.isArray(res.data?.assets)) setAssets(res.data.assets as Asset[])
+      })
+      .catch(() => {}) // silent fail — keep static data
+      .finally(() => setLoading(false))
+  }, [])
+
+  const filtered = assets.filter((a) => {
     if (riskFilter !== "All" && a.risk !== riskFilter) return false
     if (typeFilter !== "All") {
       const allowed = TYPE_MATCH[typeFilter] ?? []
@@ -52,12 +72,13 @@ export default function Assets() {
       {/* Filters */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
         {/* Risk Level pills */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }} role="group" aria-label="Filter by risk level">
           <span className="cap" style={{ marginRight: 4, whiteSpace: "nowrap" }}>Risk</span>
           {RISK_LEVELS.map((level) => (
             <button
               key={level}
               onClick={() => setRiskFilter(level)}
+              aria-pressed={riskFilter === level}
               style={{
                 padding: "4px 12px",
                 borderRadius: 100,
@@ -77,12 +98,13 @@ export default function Assets() {
         </div>
 
         {/* Type pills */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }} role="group" aria-label="Filter by asset type">
           <span className="cap" style={{ marginRight: 4, whiteSpace: "nowrap" }}>Type</span>
           {ASSET_TYPES.map((t) => (
             <button
               key={t}
               onClick={() => setTypeFilter(t)}
+              aria-pressed={typeFilter === t}
               style={{
                 padding: "4px 12px",
                 borderRadius: 100,
@@ -102,12 +124,13 @@ export default function Assets() {
         </div>
 
         {/* District pills */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }} role="group" aria-label="Filter by district">
           <span className="cap" style={{ marginRight: 4, whiteSpace: "nowrap" }}>District</span>
           {DISTRICTS.map((d) => (
             <button
               key={d}
               onClick={() => setDistrictFilter(d)}
+              aria-pressed={districtFilter === d}
               style={{
                 padding: "4px 12px",
                 borderRadius: 100,
@@ -127,82 +150,91 @@ export default function Assets() {
         </div>
       </div>
 
-      <div className="surface" style={{ overflow: "hidden" }}>
+      <div className="surface" style={{ overflow: "hidden" }} role="table" aria-label="Asset registry" aria-busy={loading}>
         {/* Table header */}
         <div
+          role="row"
           style={{
             display: "grid",
-            gridTemplateColumns: "100px 130px 1.4fr 1fr 160px 110px 160px 100px",
+            gridTemplateColumns: GRID,
             padding: "10px 18px",
             background: "var(--surface-2)",
             borderBottom: "1px solid var(--rule)",
           }}
         >
           {["ID", "Type", "Name", "Location", "Condition", "Fail prob.", "Department", "Risk"].map((h) => (
-            <div key={h} className="cap" style={{ padding: "0 6px" }}>
+            <div key={h} role="columnheader" className="cap" style={{ padding: "0 6px" }}>
               {h}
             </div>
           ))}
         </div>
 
-        {filtered.length === 0 && (
-          <div style={{ padding: "32px 18px", textAlign: "center", color: "var(--ink-faint)", fontSize: 13 }}>
-            No assets match the selected filters.
-          </div>
+        {loading ? (
+          Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} cols={GRID} />)
+        ) : filtered.length === 0 ? (
+          <EmptyState title="No matching records" sub="Try adjusting your filters" />
+        ) : (
+          filtered.map((asset) => (
+            <div
+              key={asset.id}
+              role="row"
+              tabIndex={0}
+              onClick={() => setDetail({ type: "asset", data: asset })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  setDetail({ type: "asset", data: asset })
+                }
+              }}
+              style={{
+                display: "grid",
+                gridTemplateColumns: GRID,
+                padding: "12px 18px",
+                borderBottom: "1px solid var(--rule-soft)",
+                alignItems: "center",
+                cursor: "pointer",
+                transition: "background .15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+            >
+              <div role="cell" style={{ padding: "0 6px" }}>
+                <span className="mono" style={{ fontSize: 11, color: "var(--blue)" }}>
+                  {asset.id}
+                </span>
+              </div>
+              <div role="cell" style={{ padding: "0 6px", fontSize: 12, color: "var(--ink-soft)" }}>{asset.type}</div>
+              <div role="cell" style={{ padding: "0 6px" }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{asset.name}</span>
+              </div>
+              <div role="cell" style={{ padding: "0 6px", fontSize: 12.5, color: "var(--ink-soft)" }}>{asset.where}</div>
+              <div role="cell" style={{ padding: "0 6px" }}>
+                <CondBar v={asset.cond} />
+              </div>
+              <div role="cell" style={{ padding: "0 6px" }}>
+                <span
+                  className="mono"
+                  style={{
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color:
+                      parseFloat(asset.prob) >= 50
+                        ? "var(--red)"
+                        : parseFloat(asset.prob) >= 20
+                        ? "var(--amber)"
+                        : "var(--green)",
+                  }}
+                >
+                  {asset.prob}
+                </span>
+              </div>
+              <div role="cell" style={{ padding: "0 6px", fontSize: 12, color: "var(--ink-soft)" }}>{asset.dept}</div>
+              <div role="cell" style={{ padding: "0 6px" }}>
+                <Pill sev={asset.risk} />
+              </div>
+            </div>
+          ))
         )}
-
-        {filtered.map((asset) => (
-          <div
-            key={asset.id}
-            onClick={() => setDetail({ type: "asset", data: asset })}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "100px 130px 1.4fr 1fr 160px 110px 160px 100px",
-              padding: "12px 18px",
-              borderBottom: "1px solid var(--rule-soft)",
-              alignItems: "center",
-              cursor: "pointer",
-              transition: "background .15s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "")}
-          >
-            <div style={{ padding: "0 6px" }}>
-              <span className="mono" style={{ fontSize: 11, color: "var(--blue)" }}>
-                {asset.id}
-              </span>
-            </div>
-            <div style={{ padding: "0 6px", fontSize: 12, color: "var(--ink-soft)" }}>{asset.type}</div>
-            <div style={{ padding: "0 6px" }}>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{asset.name}</span>
-            </div>
-            <div style={{ padding: "0 6px", fontSize: 12.5, color: "var(--ink-soft)" }}>{asset.where}</div>
-            <div style={{ padding: "0 6px" }}>
-              <CondBar v={asset.cond} />
-            </div>
-            <div style={{ padding: "0 6px" }}>
-              <span
-                className="mono"
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  color:
-                    parseFloat(asset.prob) >= 50
-                      ? "var(--red)"
-                      : parseFloat(asset.prob) >= 20
-                      ? "var(--amber)"
-                      : "var(--green)",
-                }}
-              >
-                {asset.prob}
-              </span>
-            </div>
-            <div style={{ padding: "0 6px", fontSize: 12, color: "var(--ink-soft)" }}>{asset.dept}</div>
-            <div style={{ padding: "0 6px" }}>
-              <Pill sev={asset.risk} />
-            </div>
-          </div>
-        ))}
       </div>
     </Screen>
   )

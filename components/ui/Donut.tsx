@@ -14,10 +14,17 @@ export default function Donut({ v, size = 42, color = "var(--blue)", label }: Do
   const circ = 2 * Math.PI * r;
   const dash = Math.max(0, Math.min(1, v)) * circ;
   const pct = Math.round(v * 100);
+  const ariaLabel = label ? `${label}: ${pct}%` : `${pct}%`;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-      <svg width={size} height={size} style={{ display: "block" }}>
+      <svg
+        width={size}
+        height={size}
+        style={{ display: "block" }}
+        role="img"
+        aria-label={ariaLabel}
+      >
         {/* Track */}
         <circle
           cx={cx}

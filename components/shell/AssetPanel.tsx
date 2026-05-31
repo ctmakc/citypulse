@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/Icon";
 
 interface AssetPanelProps {
   a: any | null;
   onClose: () => void;
+  isMobile?: boolean;
 }
 
 function riskPillClass(risk: string) {
@@ -20,11 +21,14 @@ function condColor(cond: number) {
   return "var(--green)";
 }
 
-export default function AssetPanel({ a, onClose }: AssetPanelProps) {
+export default function AssetPanel({ a, onClose, isMobile = false }: AssetPanelProps) {
   const [visible, setVisible] = useState(false);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (a) {
+      restoreRef.current = document.activeElement as HTMLElement | null;
       requestAnimationFrame(() => {
         requestAnimationFrame(() => setVisible(true));
       });
@@ -32,6 +36,25 @@ export default function AssetPanel({ a, onClose }: AssetPanelProps) {
       setVisible(false);
     }
   }, [a]);
+
+  // Focus into the sheet on open; Escape closes; focus returns to opener on close.
+  useEffect(() => {
+    if (!a) return;
+    const id = requestAnimationFrame(() => closeBtnRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.stopPropagation(); onClose(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      cancelAnimationFrame(id);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [a, onClose]);
+
+  function handleClose() {
+    onClose();
+    restoreRef.current?.focus?.();
+  }
 
   if (!a && !visible) return null;
 
@@ -41,7 +64,8 @@ export default function AssetPanel({ a, onClose }: AssetPanelProps) {
     <>
       {/* Scrim */}
       <div
-        onClick={onClose}
+        onClick={handleClose}
+        aria-hidden="true"
         style={{
           position: "fixed",
           inset: 0,
@@ -51,25 +75,30 @@ export default function AssetPanel({ a, onClose }: AssetPanelProps) {
       />
       {/* Panel */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="asset-panel-title"
         style={{
           position: "fixed",
           bottom: 0,
           left: 0,
           right: 0,
+          width: isMobile ? "100vw" : "auto",
           background: "var(--surface)",
           borderTop: "1px solid var(--rule)",
           boxShadow: "0 -4px 24px rgba(42,48,55,.12)",
           zIndex: 56,
-          borderRadius: "var(--r-xl) var(--r-xl) 0 0",
+          borderRadius: isMobile ? "var(--r-xl) var(--r-xl) 0 0" : "var(--r-xl) var(--r-xl) 0 0",
           transform: visible ? "translateY(0)" : "translateY(100%)",
           transition: "transform .3s cubic-bezier(.32,.72,0,1)",
           padding: "16px 20px 24px",
-          maxHeight: "50vh",
+          paddingBottom: isMobile ? "calc(24px + env(safe-area-inset-bottom, 0px))" : 24,
+          maxHeight: isMobile ? "80vh" : "50vh",
           overflowY: "auto",
         }}
       >
         {/* Drag handle */}
-        <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--rule)", margin: "0 auto 16px" }} />
+        <div aria-hidden="true" style={{ width: 36, height: 4, borderRadius: 2, background: "var(--rule)", margin: "0 auto 16px" }} />
 
         {shown && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -77,16 +106,18 @@ export default function AssetPanel({ a, onClose }: AssetPanelProps) {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <div className="code" style={{ marginBottom: 2 }}>{shown.id}</div>
-                <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.3 }}>{shown.name}</div>
+                <div id="asset-panel-title" style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.3 }}>{shown.name}</div>
                 <div style={{ fontSize: 12, color: "var(--ink-faint)", marginTop: 2 }}>{shown.type} · {shown.where}</div>
               </div>
               <span className={`pill ${riskPillClass(shown.risk)}`}>
-                <span className="dot" />{shown.risk}
+                <span className="dot" aria-hidden="true" />{shown.risk}
               </span>
               <button
+                ref={closeBtnRef}
                 className="btn btn-ghost"
                 style={{ padding: "5px", gap: 0, flexShrink: 0 }}
-                onClick={onClose}
+                onClick={handleClose}
+                aria-label={`Close ${shown.name} panel`}
               >
                 <Icon name="close" size={16} />
               </button>
@@ -138,7 +169,7 @@ export default function AssetPanel({ a, onClose }: AssetPanelProps) {
                   border: "1px solid rgba(42,108,146,.12)",
                 }}
               >
-                <span style={{ color: "var(--blue)", marginTop: 1, flexShrink: 0 }}>
+                <span style={{ color: "var(--blue)", marginTop: 1, flexShrink: 0 }} aria-hidden="true">
                   <Icon name="sparkles" size={14} />
                 </span>
                 <span style={{ fontSize: 12.5, color: "var(--blue)", lineHeight: 1.5 }}>

@@ -30,22 +30,44 @@ const SCRIPTED: Record<string, string> = {
 interface AssistantDockProps {
   open: boolean;
   onClose: () => void;
+  isMobile?: boolean;
 }
 
 let _id = 0;
 function nextId() { return ++_id; }
 
-export default function AssistantDock({ open, onClose }: AssistantDockProps) {
+export default function AssistantDock({ open, onClose, isMobile = false }: AssistantDockProps) {
   const [messages, setMessages] = useState<Message[]>([
     { id: nextId(), role: "ai", text: "Hello! I'm Meridian AI. I can help you understand what's happening across the city, surface risks, and draft decisions. What would you like to know?" },
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  // On open, move focus into the dock. On Escape, close and let the parent
+  // restore focus to the "Ask Meridian" trigger.
+  useEffect(() => {
+    if (!open) return;
+    const id = requestAnimationFrame(() => closeBtnRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+        (document.querySelector('[aria-label="Ask Meridian AI"]') as HTMLElement | null)?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      cancelAnimationFrame(id);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
 
   async function sendMessage(text: string) {
     if (!text.trim()) return;
@@ -71,14 +93,19 @@ export default function AssistantDock({ open, onClose }: AssistantDockProps) {
 
   return (
     <div
+      ref={rootRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Meridian AI assistant"
       style={{
-        width: 392,
+        width: isMobile ? "100vw" : 392,
         height: "100%",
         display: "flex",
         flexDirection: "column",
         background: "var(--surface)",
-        borderLeft: "1px solid var(--rule)",
+        borderLeft: isMobile ? "none" : "1px solid var(--rule)",
         flexShrink: 0,
+        paddingBottom: isMobile ? "env(safe-area-inset-bottom, 0px)" : 0,
       }}
     >
       {/* Header */}
@@ -92,15 +119,16 @@ export default function AssistantDock({ open, onClose }: AssistantDockProps) {
           flexShrink: 0,
         }}
       >
-        <span style={{ color: "var(--blue)" }}>
+        <span style={{ color: "var(--blue)" }} aria-hidden="true">
           <Icon name="sparkles" size={18} />
         </span>
         <span style={{ fontWeight: 700, fontSize: 14, flex: 1 }}>Meridian AI</span>
         <button
+          ref={closeBtnRef}
           className="btn btn-ghost"
           style={{ padding: "5px", gap: 0 }}
           onClick={onClose}
-          aria-label="Close AI dock"
+          aria-label="Close AI assistant"
         >
           <Icon name="close" size={16} />
         </button>
@@ -148,7 +176,12 @@ export default function AssistantDock({ open, onClose }: AssistantDockProps) {
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div
+        role="log"
+        aria-live="polite"
+        aria-label="Conversation"
+        style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 12 }}
+      >
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -175,7 +208,7 @@ export default function AssistantDock({ open, onClose }: AssistantDockProps) {
           </div>
         ))}
         {isTyping && (
-          <div style={{ display: "flex", justifyContent: "flex-start" }}>
+          <div style={{ display: "flex", justifyContent: "flex-start" }} aria-label="Meridian AI is typing">
             <div
               style={{
                 padding: "10px 16px",
@@ -220,6 +253,7 @@ export default function AssistantDock({ open, onClose }: AssistantDockProps) {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(inputValue); } }}
+          aria-label="Ask Meridian AI about any risk, asset, or decision"
           placeholder="Ask about any risk, asset, or decision…"
           style={{
             flex: 1,
@@ -238,6 +272,7 @@ export default function AssistantDock({ open, onClose }: AssistantDockProps) {
           style={{ padding: "7px 14px", gap: 6, background: "var(--blue)", flexShrink: 0 }}
           onClick={() => sendMessage(inputValue)}
           disabled={isTyping}
+          aria-label="Send message"
         >
           <Icon name="send" size={14} />
         </button>

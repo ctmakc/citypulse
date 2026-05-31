@@ -35,6 +35,8 @@ export default function TimeBar({ inline }: TimeBarProps) {
         max={72}
         value={val}
         onChange={(e) => setVal(Number(e.target.value))}
+        aria-label="Time horizon: history to forecast, in hours"
+        aria-valuetext={`${val > 0 ? "+" : ""}${val}h — ${label}`}
         style={{
           flex: 1,
           minWidth: 80,

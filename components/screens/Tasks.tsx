@@ -1,14 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Screen from "@/components/ui/Screen"
 import ScreenHead from "@/components/ui/ScreenHead"
 import Stat from "@/components/ui/Stat"
 import Pill from "@/components/ui/Pill"
 import Icon from "@/components/ui/Icon"
+import EmptyState from "@/components/ui/EmptyState"
+import { SkeletonRow } from "@/components/ui/Skeleton"
 import { TASKS } from "@/lib/data"
-import { workOrdersApi } from "@/lib/api"
+import { workOrdersApi, isLoggedIn } from "@/lib/api"
 import type { Task } from "@/lib/types"
+
+const LIST_GRID = "90px 90px 1.6fr 1fr 1fr 90px 110px"
 
 const TABS = [
   { key: "list", label: "List", icon: "list" },
@@ -115,12 +119,27 @@ export default function Tasks() {
   const [submitting, setSubmitting] = useState(false)
   const [toasts, setToasts] = useState<Toast[]>([])
   const [titleError, setTitleError] = useState(false)
+  const [tasks, setTasks] = useState<Task[]>(TASKS)
+  // Skeletons only while an authenticated fetch is in flight; demo shows static data instantly.
+  const [loading, setLoading] = useState(() => isLoggedIn())
 
-  const openCount = TASKS.filter((t) => t.status !== "Resolved").length
-  const critCount = TASKS.filter((t) => t.pri === "Critical").length
-  const inProgressCount = TASKS.filter((t) => t.status === "In progress").length
-  const scheduledCount = TASKS.filter((t) => t.status === "Scheduled").length
-  const backlogCount = TASKS.filter((t) => t.status === "New").length
+  useEffect(() => {
+    if (!isLoggedIn()) return
+    setLoading(true)
+    workOrdersApi.list()
+      .then((res) => {
+        if (Array.isArray(res.data)) setTasks(res.data as Task[])
+        else if (Array.isArray(res.data?.workOrders)) setTasks(res.data.workOrders as Task[])
+      })
+      .catch(() => {}) // silent fail — keep static data
+      .finally(() => setLoading(false))
+  }, [])
+
+  const openCount = tasks.filter((t) => t.status !== "Resolved").length
+  const critCount = tasks.filter((t) => t.pri === "Critical").length
+  const inProgressCount = tasks.filter((t) => t.status === "In progress").length
+  const scheduledCount = tasks.filter((t) => t.status === "Scheduled").length
+  const backlogCount = tasks.filter((t) => t.status === "New").length
 
   const WEEKS = 8
   const weekLabels = ["Jun 1", "Jun 8", "Jun 15", "Jun 22", "Jun 29", "Jul 6", "Jul 13", "Jul 20"]
@@ -204,6 +223,8 @@ export default function Tasks() {
       {/* Tab switcher */}
       <div style={{ display: "flex", gap: 0 }}>
         <div
+          role="tablist"
+          aria-label="Task views"
           style={{
             display: "inline-flex",
             background: "var(--surface)",
@@ -216,6 +237,8 @@ export default function Tasks() {
           {TABS.map((tab) => (
             <button
               key={tab.key}
+              role="tab"
+              aria-selected={activeTab === tab.key}
               onClick={() => setActiveTab(tab.key)}
               style={{
                 display: "flex",
@@ -241,12 +264,13 @@ export default function Tasks() {
 
       {/* Tab content */}
       {activeTab === "list" && (
-        <div className="surface" style={{ overflow: "hidden" }}>
+        <div className="surface" style={{ overflow: "hidden" }} role="table" aria-label="Work orders" aria-busy={loading}>
           {/* Header */}
           <div
+            role="row"
             style={{
               display: "grid",
-              gridTemplateColumns: "90px 90px 1.6fr 1fr 1fr 90px 110px",
+              gridTemplateColumns: LIST_GRID,
               gap: 0,
               padding: "10px 18px",
               background: "var(--surface-2)",
@@ -254,44 +278,49 @@ export default function Tasks() {
             }}
           >
             {["Priority", "ID", "Task", "Department", "Assignee", "Due", "Status"].map((h) => (
-              <div key={h} className="cap" style={{ padding: "0 8px" }}>
+              <div key={h} role="columnheader" className="cap" style={{ padding: "0 8px" }}>
                 {h}
               </div>
             ))}
           </div>
-          {TASKS.map((task) => (
+          {loading ? (
+            Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} cols={LIST_GRID} padding="11px 18px" />)
+          ) : tasks.length === 0 ? (
+            <EmptyState title="No matching records" sub="Try adjusting your filters" />
+          ) : tasks.map((task) => (
             <div
               key={task.id}
+              role="row"
               style={{
                 display: "grid",
-                gridTemplateColumns: "90px 90px 1.6fr 1fr 1fr 90px 110px",
+                gridTemplateColumns: LIST_GRID,
                 gap: 0,
                 padding: "11px 18px",
                 borderBottom: "1px solid var(--rule-soft)",
                 alignItems: "center",
               }}
             >
-              <div style={{ padding: "0 8px", display: "flex", alignItems: "center", gap: 5 }}>
+              <div role="cell" style={{ padding: "0 8px", display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 7, height: 7, borderRadius: 2, background: PRI_COLOR[task.pri] ?? "var(--ink)", flexShrink: 0 }} />
                 <span style={{ fontSize: 11, fontWeight: 700, color: PRI_COLOR[task.pri] ?? "var(--ink)" }}>
                   {task.pri}
                 </span>
               </div>
-              <div style={{ padding: "0 8px" }}>
+              <div role="cell" style={{ padding: "0 8px" }}>
                 <span className="mono" style={{ fontSize: 11.5, color: "var(--blue)" }}>
                   {task.id}
                 </span>
               </div>
-              <div style={{ padding: "0 8px" }}>
+              <div role="cell" style={{ padding: "0 8px" }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)", lineHeight: 1.4 }}>
                   {task.title}
                 </div>
                 <div style={{ fontSize: 10.5, color: "var(--ink-faint)", marginTop: 1 }}>{task.source}</div>
               </div>
-              <div style={{ padding: "0 8px", fontSize: 12.5, color: "var(--ink-soft)" }}>{task.dept}</div>
-              <div style={{ padding: "0 8px", fontSize: 12.5, color: "var(--ink)" }}>{task.assignee}</div>
-              <div style={{ padding: "0 8px", fontSize: 12.5, color: "var(--ink-soft)" }}>{task.due}</div>
-              <div style={{ padding: "0 8px" }}>
+              <div role="cell" style={{ padding: "0 8px", fontSize: 12.5, color: "var(--ink-soft)" }}>{task.dept}</div>
+              <div role="cell" style={{ padding: "0 8px", fontSize: 12.5, color: "var(--ink)" }}>{task.assignee}</div>
+              <div role="cell" style={{ padding: "0 8px", fontSize: 12.5, color: "var(--ink-soft)" }}>{task.due}</div>
+              <div role="cell" style={{ padding: "0 8px" }}>
                 <span
                   style={{
                     fontSize: 11,
@@ -353,7 +382,7 @@ export default function Tasks() {
           {/* Calendar cells */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
             {calCells.map((day, idx) => {
-              const dayTasks = day ? TASKS.filter((t) => t.dueDay === day - 1 || (day === 1 && t.dueDay === 0)) : []
+              const dayTasks = day ? tasks.filter((t) => t.dueDay === day - 1 || (day === 1 && t.dueDay === 0)) : []
               return (
                 <div
                   key={idx}
@@ -425,7 +454,7 @@ export default function Tasks() {
               </div>
             ))}
           </div>
-          {TASKS.map((task) => (
+          {tasks.map((task) => (
             <div
               key={task.id}
               style={{
@@ -505,6 +534,7 @@ export default function Tasks() {
               </div>
               <button
                 onClick={closeModal}
+                aria-label="Close"
                 style={{
                   background: "none",
                   border: "none",
@@ -582,11 +612,12 @@ export default function Tasks() {
                   <label style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: "var(--ink-soft)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                     Priority
                   </label>
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 6 }} role="group" aria-label="Priority">
                     {PRIORITIES.map((p) => (
                       <button
                         key={p}
                         onClick={() => setForm((f) => ({ ...f, priority: p }))}
+                        aria-pressed={form.priority === p}
                         style={{
                           flex: 1,
                           padding: "7px 4px",

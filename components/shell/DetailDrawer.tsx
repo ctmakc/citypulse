@@ -9,6 +9,7 @@ import type { Asset } from "@/lib/types";
 interface DetailDrawerProps {
   detail: any | null;
   onClose: () => void;
+  isMobile?: boolean;
 }
 
 function AgentDetail({ d }: { d: any }) {
@@ -357,12 +358,16 @@ function FallbackDetail({ d }: { d: any }) {
   );
 }
 
-export default function DetailDrawer({ detail, onClose }: DetailDrawerProps) {
+export default function DetailDrawer({ detail, onClose, isMobile = false }: DetailDrawerProps) {
   const [visible, setVisible] = useState(false);
   const prevDetail = useRef<any>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (detail) {
+      // Remember what to restore focus to when the drawer closes.
+      restoreRef.current = document.activeElement as HTMLElement | null;
       prevDetail.current = detail;
       requestAnimationFrame(() => {
         requestAnimationFrame(() => setVisible(true));
@@ -372,15 +377,41 @@ export default function DetailDrawer({ detail, onClose }: DetailDrawerProps) {
     }
   }, [detail]);
 
+  // Move focus into the drawer on open; Escape closes; focus returns to opener on close.
+  useEffect(() => {
+    if (!detail) return;
+    const id = requestAnimationFrame(() => closeBtnRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.stopPropagation(); onClose(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      cancelAnimationFrame(id);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [detail, onClose]);
+
+  function handleClose() {
+    onClose();
+    restoreRef.current?.focus?.();
+  }
+
   const shown = detail || prevDetail.current;
 
   if (!shown && !visible) return null;
+
+  const title =
+    shown?.type === "agent" ? "Agent Detail" :
+    shown?.type === "project" ? "Grant Project" :
+    shown?.type === "report" ? "311 Report" :
+    shown?.type === "asset" ? "Asset Detail" : "Detail";
 
   return (
     <>
       {/* Scrim */}
       <div
-        onClick={onClose}
+        onClick={handleClose}
+        aria-hidden="true"
         style={{
           position: "fixed",
           inset: 0,
@@ -392,14 +423,17 @@ export default function DetailDrawer({ detail, onClose }: DetailDrawerProps) {
       />
       {/* Drawer */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="detail-drawer-title"
         style={{
           position: "fixed",
           top: 0,
           right: 0,
-          width: "min(540px, 100vw)",
+          width: isMobile ? "100vw" : "min(540px, 100vw)",
           height: "100%",
           background: "var(--surface)",
-          borderLeft: "1px solid var(--rule)",
+          borderLeft: isMobile ? "none" : "1px solid var(--rule)",
           boxShadow: "var(--sh-pop)",
           zIndex: 61,
           overflowY: "auto",
@@ -419,16 +453,15 @@ export default function DetailDrawer({ detail, onClose }: DetailDrawerProps) {
             flexShrink: 0,
           }}
         >
-          <div style={{ flex: 1, fontWeight: 700, fontSize: 13.5 }}>
-            {shown?.type === "agent" ? "Agent Detail" :
-             shown?.type === "project" ? "Grant Project" :
-             shown?.type === "report" ? "311 Report" :
-             shown?.type === "asset" ? "Asset Detail" : "Detail"}
+          <div id="detail-drawer-title" style={{ flex: 1, fontWeight: 700, fontSize: 13.5 }}>
+            {title}
           </div>
           <button
+            ref={closeBtnRef}
             className="btn btn-ghost"
             style={{ padding: "5px", gap: 0 }}
-            onClick={onClose}
+            onClick={handleClose}
+            aria-label={`Close ${title}`}
           >
             <Icon name="close" size={16} />
           </button>

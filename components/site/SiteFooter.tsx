@@ -41,7 +41,7 @@ const headingStyle: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  color: 'rgba(255,255,255,0.35)',
+  color: 'rgba(255,255,255,0.6)',
   margin: '0 0 14px',
 }
 
@@ -126,10 +126,10 @@ export default function SiteFooter() {
             gap: 12,
           }}
         >
-          <span style={{ fontFamily: 'var(--grotesk)', fontSize: 12.5, color: 'rgba(255,255,255,0.4)' }}>
+          <span style={{ fontFamily: 'var(--grotesk)', fontSize: 12.5, color: 'rgba(255,255,255,0.6)' }}>
             © 2026 CityPULSE. A demonstration concept.
           </span>
-          <span style={{ fontFamily: 'var(--grotesk)', fontSize: 12.5, color: 'rgba(255,255,255,0.4)' }}>
+          <span style={{ fontFamily: 'var(--grotesk)', fontSize: 12.5, color: 'rgba(255,255,255,0.6)' }}>
             Privacy · Accessibility (WCAG 2.1 AA) · Open data
           </span>
         </div>

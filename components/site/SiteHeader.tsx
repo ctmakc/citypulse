@@ -93,6 +93,9 @@ export default function SiteHeader() {
         borderBottom: '1px solid var(--rule)',
       }}
     >
+      {/* Skip link — first focusable element, jumps past nav to <main> */}
+      <a href="#main-content" className="skip-link">Skip to content</a>
+
       {/* Scoped responsive rules for the burger / desktop nav swap */}
       <style>{`
         @media (max-width: 760px) {
@@ -121,7 +124,7 @@ export default function SiteHeader() {
         <SealLogo />
 
         {/* Desktop nav */}
-        <nav className="sh-desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <nav className="sh-desktop-nav" aria-label="Primary" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           {NAV_LINKS.map(({ label, href }) => {
             const active = isActive(href)
             return (
@@ -177,8 +180,9 @@ export default function SiteHeader() {
 
       {/* Mobile slide-down menu */}
       {open && (
-        <div
+        <nav
           className="sh-mobile-menu"
+          aria-label="Mobile"
           style={{
             borderTop: '1px solid var(--rule)',
             background: 'var(--paper)',
@@ -215,7 +219,7 @@ export default function SiteHeader() {
           >
             Request a pilot
           </Link>
-        </div>
+        </nav>
       )}
     </header>
   )

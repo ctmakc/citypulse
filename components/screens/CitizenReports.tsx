@@ -5,8 +5,13 @@ import Screen from "@/components/ui/Screen"
 import ScreenHead from "@/components/ui/ScreenHead"
 import Stat from "@/components/ui/Stat"
 import Pill from "@/components/ui/Pill"
+import EmptyState from "@/components/ui/EmptyState"
+import { SkeletonRow } from "@/components/ui/Skeleton"
 import { CATS_311, REPORTS_311 } from "@/lib/data"
-import { reports311Api } from "@/lib/api"
+import { reports311Api, isLoggedIn } from "@/lib/api"
+import type { Report311 } from "@/lib/types"
+
+const RPT_GRID = "100px 130px 100px 1fr 140px 100px 120px 80px"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -44,7 +49,10 @@ const SEV_COLORS: Record<Severity, { bg: string; color: string; border: string }
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CitizenReports() {
-  const highSev = REPORTS_311.filter((r) => r.sev === "High").length
+  // Live reports (falls back to static demo data when logged out)
+  const [reports, setReports] = useState<Report311[]>(REPORTS_311)
+  const [loading, setLoading] = useState(() => isLoggedIn())
+  const highSev = reports.filter((r) => r.sev === "High").length
 
   // Modal & form state
   const [isModalOpen, setIsModalOpen]   = useState(false)
@@ -59,6 +67,19 @@ export default function CitizenReports() {
     description: "",
     email:       "",
   })
+
+  // Load live reports (authenticated only — demo keeps static data, no skeleton flash)
+  useEffect(() => {
+    if (!isLoggedIn()) return
+    setLoading(true)
+    reports311Api.list()
+      .then((res) => {
+        if (Array.isArray(res.data)) setReports(res.data as Report311[])
+        else if (Array.isArray(res.data?.reports)) setReports(res.data.reports as Report311[])
+      })
+      .catch(() => {}) // silent fail — keep static data
+      .finally(() => setLoading(false))
+  }, [])
 
   // Auto-hide toast after 4 s
   useEffect(() => {
@@ -213,48 +234,55 @@ export default function CitizenReports() {
       </div>
 
       {/* ── Reports table ───────────────────────────────────────────────────── */}
-      <div className="surface" style={{ overflow: "hidden" }}>
+      <div className="surface" style={{ overflow: "hidden" }} role="table" aria-label="Citizen 311 reports" aria-busy={loading}>
         <div
+          role="row"
           style={{
             display: "grid",
-            gridTemplateColumns: "100px 130px 100px 1fr 140px 100px 120px 80px",
+            gridTemplateColumns: RPT_GRID,
             padding: "10px 18px",
             background: "var(--surface-2)",
             borderBottom: "1px solid var(--rule)",
           }}
         >
           {["ID", "Category", "Severity", "Location", "Dept", "SLA", "Status", "Dups"].map((h) => (
-            <div key={h} className="cap" style={{ padding: "0 6px" }}>
+            <div key={h} role="columnheader" className="cap" style={{ padding: "0 6px" }}>
               {h}
             </div>
           ))}
         </div>
 
-        {REPORTS_311.map((report) => (
+        {loading ? (
+          Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} cols={RPT_GRID} padding="11px 18px" />)
+        ) : reports.length === 0 ? (
+          <EmptyState title="No matching records" sub="Try adjusting your filters" />
+        ) : reports.map((report) => (
           <div
             key={report.id}
+            role="row"
             style={{
               display: "grid",
-              gridTemplateColumns: "100px 130px 100px 1fr 140px 100px 120px 80px",
+              gridTemplateColumns: RPT_GRID,
               padding: "11px 18px",
               borderBottom: "1px solid var(--rule-soft)",
               alignItems: "center",
             }}
           >
-            <div style={{ padding: "0 6px" }}>
+            <div role="cell" style={{ padding: "0 6px" }}>
               <span className="mono" style={{ fontSize: 11.5, color: "var(--blue)" }}>
                 {report.id}
               </span>
             </div>
-            <div style={{ padding: "0 6px", fontSize: 12.5, color: "var(--ink)" }}>{report.cat}</div>
-            <div style={{ padding: "0 6px" }}>
+            <div role="cell" style={{ padding: "0 6px", fontSize: 12.5, color: "var(--ink)" }}>{report.cat}</div>
+            <div role="cell" style={{ padding: "0 6px" }}>
               <Pill sev={report.sev} />
             </div>
-            <div style={{ padding: "0 6px", fontSize: 12.5, color: "var(--ink-soft)" }}>
+            <div role="cell" style={{ padding: "0 6px", fontSize: 12.5, color: "var(--ink-soft)" }}>
               {report.where}
             </div>
-            <div style={{ padding: "0 6px", fontSize: 12, color: "var(--ink-soft)" }}>{report.dept}</div>
+            <div role="cell" style={{ padding: "0 6px", fontSize: 12, color: "var(--ink-soft)" }}>{report.dept}</div>
             <div
+              role="cell"
               style={{
                 padding: "0 6px",
                 fontSize: 12,
@@ -269,7 +297,7 @@ export default function CitizenReports() {
             >
               {report.sla}
             </div>
-            <div style={{ padding: "0 6px" }}>
+            <div role="cell" style={{ padding: "0 6px" }}>
               <span
                 style={{
                   fontSize: 11,
@@ -298,6 +326,7 @@ export default function CitizenReports() {
               </span>
             </div>
             <div
+              role="cell"
               style={{
                 padding: "0 6px",
                 fontSize: 12,
@@ -404,7 +433,7 @@ export default function CitizenReports() {
               {/* Severity pills */}
               <div>
                 <label style={labelStyle}>Severity</label>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 8 }} role="group" aria-label="Severity">
                   {SEVERITIES.map((sev) => {
                     const active = formData.severity === sev
                     const sc = SEV_COLORS[sev]
@@ -413,6 +442,7 @@ export default function CitizenReports() {
                         key={sev}
                         type="button"
                         onClick={() => setFormData((f) => ({ ...f, severity: sev }))}
+                        aria-pressed={active}
                         style={{
                           flex: 1,
                           padding: "8px 0",

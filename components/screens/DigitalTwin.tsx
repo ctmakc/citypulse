@@ -58,6 +58,8 @@ export default function DigitalTwin() {
         <div className="surface" style={{ flex: 1, position: "relative", overflow: "hidden" }}>
           {/* Mode switcher */}
           <div
+            role="group"
+            aria-label="Map view mode"
             style={{
               position: "absolute",
               top: 12,
@@ -78,6 +80,7 @@ export default function DigitalTwin() {
               <button
                 key={mode}
                 onClick={() => setMapMode(mode)}
+                aria-pressed={mapMode === mode}
                 style={{
                   fontSize: 11.5,
                   fontWeight: 600,

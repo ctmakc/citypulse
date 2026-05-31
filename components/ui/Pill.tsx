@@ -52,7 +52,6 @@ export function Pill({ sev, children, className, style }: PillProps) {
       className={`pill ${sevClass(sev)}${className ? ` ${className}` : ""}`}
       style={style}
       aria-label={sevAriaLabel(sev, children)}
-      role="status"
     >
       <span className="dot" aria-hidden="true" />
       {children ?? sev}

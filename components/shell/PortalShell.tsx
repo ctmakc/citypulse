@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { usePortalStore } from "@/lib/store";
 import TopBar from "@/components/shell/TopBar";
@@ -13,7 +13,7 @@ import { authApi } from "@/lib/api";
 
 const BOTTOM_TABS: [string, string, string][] = [
   ["overview", "Overview", "overview"],
-  ["digital-twin", "Map", "twin"],
+  ["digital-twin", "Twin", "twin"],
   ["tasks", "Tasks", "tasks"],
   ["ai-agents", "Agents", "ai"],
 ];
@@ -45,6 +45,9 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
   const { aiOpen, setAIOpen, picked, setPicked, detail, setDetail, navOpen, setNavOpen, setCurrentUser, role } = usePortalStore();
 
+  const [skipFocused, setSkipFocused] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+
   // Load current user — only if token exists, otherwise use placeholder immediately
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('citypulse_token') : null;
@@ -69,8 +72,66 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Close the mobile slide-over whenever we leave mobile width.
+  useEffect(() => {
+    if (!isMobile && navOpen) setNavOpen(false);
+  }, [isMobile, navOpen, setNavOpen]);
+
+  // Mobile drawer: move focus inside on open, restore to the hamburger on close,
+  // and close on Escape. The hamburger lives in TopBar so we restore by querying it.
+  useEffect(() => {
+    if (!isMobile) return;
+    if (navOpen) {
+      const id = requestAnimationFrame(() => {
+        drawerRef.current?.querySelector<HTMLElement>("button, a, [tabindex]")?.focus();
+      });
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setNavOpen(false);
+          (document.querySelector('[aria-controls="primary-navigation"]') as HTMLElement | null)?.focus();
+        }
+      };
+      document.addEventListener("keydown", onKey);
+      return () => {
+        cancelAnimationFrame(id);
+        document.removeEventListener("keydown", onKey);
+      };
+    }
+  }, [navOpen, isMobile, setNavOpen]);
+
+  function closeNav() {
+    setNavOpen(false);
+    (document.querySelector('[aria-controls="primary-navigation"]') as HTMLElement | null)?.focus();
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      {/* Skip to content — first focusable element. Visually hidden until focused.
+          `.skip-link` is styled globally; inline state is a self-contained fallback. */}
+      <a
+        href="#main-content"
+        className="skip-link"
+        onFocus={() => setSkipFocused(true)}
+        onBlur={() => setSkipFocused(false)}
+        style={
+          skipFocused
+            ? {
+                position: "fixed", top: 8, left: 8, zIndex: 9999,
+                background: "var(--ink)", color: "#fff",
+                padding: "8px 14px", borderRadius: "var(--r-sm)",
+                fontSize: 13, fontWeight: 600, textDecoration: "none",
+                boxShadow: "var(--sh-3)",
+              }
+            : {
+                position: "absolute", width: 1, height: 1,
+                padding: 0, margin: -1, overflow: "hidden",
+                clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0,
+              }
+        }
+      >
+        Skip to content
+      </a>
+
       {/* Top bar */}
       <TopBar />
 
@@ -90,23 +151,30 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           </div>
         )}
 
-        {/* Mobile sidebar overlay */}
+        {/* Mobile sidebar slide-over */}
         {isMobile && (
           <>
             {/* Scrim */}
-            {navOpen && (
-              <div
-                onClick={() => setNavOpen(false)}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "rgba(42,48,55,.28)",
-                  zIndex: 45,
-                }}
-              />
-            )}
+            <div
+              onClick={closeNav}
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "rgba(42,48,55,.28)",
+                zIndex: 45,
+                opacity: navOpen ? 1 : 0,
+                pointerEvents: navOpen ? "auto" : "none",
+                transition: "opacity .28s",
+              }}
+            />
             {/* Slide-over */}
             <div
+              ref={drawerRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Primary navigation"
+              aria-hidden={!navOpen}
               style={{
                 position: "absolute",
                 top: 0,
@@ -119,16 +187,19 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                 transform: navOpen ? "translateX(0)" : "translateX(-100%)",
                 transition: "transform .28s cubic-bezier(.32,.72,0,1)",
                 paddingBottom: 16,
+                visibility: navOpen ? "visible" : "hidden",
               }}
-              onClick={() => setNavOpen(false)}
             >
-              <Sidebar currentPath={pathname} />
+              {/* Closes on nav click (onNavigate) or scrim tap (above). */}
+              <Sidebar currentPath={pathname} onNavigate={closeNav} />
             </div>
           </>
         )}
 
         {/* Main content area */}
         <main
+          id="main-content"
+          tabIndex={-1}
           style={{
             flex: 1,
             minWidth: 0,
@@ -136,12 +207,13 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             flexDirection: "column",
             minHeight: 0,
             overflowY: "auto",
+            outline: "none",
           }}
         >
           {children}
         </main>
 
-        {/* AI Dock — right side push panel */}
+        {/* AI Dock — right side push panel (desktop) */}
         <div
           style={{
             width: aiOpen ? 392 : 0,
@@ -153,21 +225,25 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         >
           {aiOpen && (
             <div style={{ width: 392, height: "100%" }}>
-              <AssistantDock open={aiOpen} onClose={() => setAIOpen(false)} />
+              <AssistantDock open={aiOpen} onClose={() => setAIOpen(false)} isMobile={false} />
             </div>
           )}
         </div>
 
-        {/* Mobile AI overlay */}
-        {isMobile && aiOpen && (
+        {/* Mobile AI overlay — full-screen slide-in */}
+        {isMobile && (
           <>
             <div
               onClick={() => setAIOpen(false)}
+              aria-hidden="true"
               style={{
                 position: "fixed",
                 inset: 0,
                 background: "rgba(42,48,55,.18)",
                 zIndex: 58,
+                opacity: aiOpen ? 1 : 0,
+                pointerEvents: aiOpen ? "auto" : "none",
+                transition: "opacity .3s",
               }}
             />
             <div
@@ -177,26 +253,31 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                 zIndex: 59,
                 display: "flex",
                 flexDirection: "column",
+                transform: aiOpen ? "translateX(0)" : "translateX(100%)",
+                transition: "transform .32s cubic-bezier(.32,.72,0,1)",
+                pointerEvents: aiOpen ? "auto" : "none",
+                visibility: aiOpen ? "visible" : "hidden",
               }}
             >
-              <AssistantDock open={aiOpen} onClose={() => setAIOpen(false)} />
+              {aiOpen && <AssistantDock open={aiOpen} onClose={() => setAIOpen(false)} isMobile />}
             </div>
           </>
         )}
       </div>
 
       {/* Asset bottom panel */}
-      <AssetPanel a={picked} onClose={() => setPicked(null)} />
+      <AssetPanel a={picked} onClose={() => setPicked(null)} isMobile={isMobile} />
 
       {/* Detail drawer */}
-      <DetailDrawer detail={detail} onClose={() => setDetail(null)} />
+      <DetailDrawer detail={detail} onClose={() => setDetail(null)} isMobile={isMobile} />
 
       {/* Global toast notifications */}
       <Toast />
 
       {/* Mobile bottom tabs */}
       {isMobile && (
-        <div
+        <nav
+          aria-label="Bottom navigation"
           style={{
             display: "flex",
             borderTop: "1px solid var(--rule)",
@@ -211,6 +292,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               <button
                 key={slug}
                 onClick={() => router.push(`/${slug}`)}
+                aria-current={active ? "page" : undefined}
+                aria-label={label}
                 style={{
                   flex: 1,
                   display: "flex",
@@ -235,6 +318,9 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           })}
           <button
             onClick={() => setNavOpen(true)}
+            aria-label="More — open full navigation menu"
+            aria-haspopup="dialog"
+            aria-expanded={navOpen}
             style={{
               flex: 1,
               display: "flex",
@@ -254,7 +340,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             <Icon name="menu" size={20} strokeWidth={1.7} />
             More
           </button>
-        </div>
+        </nav>
       )}
     </div>
   );

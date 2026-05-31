@@ -56,6 +56,8 @@ const ICON_MAP: Record<string, string> = {
 
 interface SidebarProps {
   currentPath: string;
+  /** Called after a nav item is activated (e.g. close the mobile slide-over). */
+  onNavigate?: () => void;
 }
 
 function isActive(slug: string, currentPath: string): boolean {
@@ -63,12 +65,28 @@ function isActive(slug: string, currentPath: string): boolean {
   return clean === slug;
 }
 
-export default function Sidebar({ currentPath }: SidebarProps) {
+// Reset so a native <button> visually matches the original .nav-item <div>.
+const navItemReset: React.CSSProperties = {
+  width: "100%",
+  border: "none",
+  background: "transparent",
+  font: "inherit",
+  textAlign: "left",
+};
+
+export default function Sidebar({ currentPath, onNavigate }: SidebarProps) {
   const router = useRouter();
   const { currentUser } = usePortalStore();
 
+  function go(slug: string) {
+    router.push(`/${slug}`);
+    onNavigate?.();
+  }
+
   return (
     <nav
+      id="primary-navigation"
+      aria-label="Primary"
       style={{
         width: 218,
         height: "100%",
@@ -98,13 +116,15 @@ export default function Sidebar({ currentPath }: SidebarProps) {
               const active = isActive(slug, currentPath);
               const isEmergency = slug === "emergency";
               return (
-                <div
+                <button
                   key={slug}
+                  type="button"
                   className={`nav-item${active ? " active" : ""}`}
-                  onClick={() => router.push(`/${slug}`)}
-                  style={{ margin: "0 8px", position: "relative" }}
+                  onClick={() => go(slug)}
+                  aria-current={active ? "page" : undefined}
+                  style={{ ...navItemReset, margin: "0 8px", position: "relative", width: "calc(100% - 16px)" }}
                 >
-                  <span className="nav-ico" style={{ position: "relative" }}>
+                  <span className="nav-ico" style={{ position: "relative" }} aria-hidden="true">
                     <Icon name={ICON_MAP[slug] || "info"} size={16} />
                     {isEmergency && (
                       <span
@@ -127,6 +147,7 @@ export default function Sidebar({ currentPath }: SidebarProps) {
                   {badge != null && (
                     <span
                       className="mono"
+                      aria-label={`${badge} open`}
                       style={{
                         fontSize: 10,
                         background: "var(--amber-wash)",
@@ -140,7 +161,7 @@ export default function Sidebar({ currentPath }: SidebarProps) {
                       {badge}
                     </span>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -153,12 +174,15 @@ export default function Sidebar({ currentPath }: SidebarProps) {
           borderTop: "1px solid var(--rule)", padding: "10px 12px",
           display: "flex", alignItems: "center", gap: 10,
         }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: "var(--blue)", color: "#fff",
-            display: "grid", placeItems: "center",
-            fontSize: 12, fontWeight: 700, flexShrink: 0,
-          }}>
+          <div
+            aria-hidden="true"
+            style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: "var(--blue)", color: "#fff",
+              display: "grid", placeItems: "center",
+              fontSize: 12, fontWeight: 700, flexShrink: 0,
+            }}
+          >
             {currentUser.initials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -175,16 +199,18 @@ export default function Sidebar({ currentPath }: SidebarProps) {
 
       {/* Settings separator */}
       <div style={{ borderTop: "1px solid var(--rule)", margin: "0 8px 0", paddingTop: 8 }}>
-        <div
+        <button
+          type="button"
           className={`nav-item${isActive("settings", currentPath) ? " active" : ""}`}
-          onClick={() => router.push("/settings")}
-          style={{ margin: "0" }}
+          onClick={() => go("settings")}
+          aria-current={isActive("settings", currentPath) ? "page" : undefined}
+          style={{ ...navItemReset, margin: 0 }}
         >
-          <span className="nav-ico">
+          <span className="nav-ico" aria-hidden="true">
             <Icon name="settings" size={16} />
           </span>
           Settings
-        </div>
+        </button>
       </div>
     </nav>
   );

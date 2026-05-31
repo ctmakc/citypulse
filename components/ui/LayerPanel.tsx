@@ -18,14 +18,20 @@ const DEFAULT_ON: Record<string, boolean> = {
   "Air quality": true,
 };
 
-function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
+function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; label: string }) {
   return (
-    <div
+    <button
+      type="button"
       onClick={onChange}
+      role="switch"
+      aria-checked={on}
+      aria-label={`${label} layer`}
       style={{
         width: 30,
         height: 17,
         borderRadius: 100,
+        border: "none",
+        padding: 0,
         background: on ? "var(--blue)" : "var(--rule)",
         position: "relative",
         cursor: "pointer",
@@ -34,6 +40,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
       }}
     >
       <div
+        aria-hidden="true"
         style={{
           position: "absolute",
           top: 2,
@@ -46,7 +53,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
           transition: "left .18s ease",
         }}
       />
-    </div>
+    </button>
   );
 }
 
@@ -63,9 +70,15 @@ export default function LayerPanel() {
       {LAYER_GROUPS.map(([group, items]) => (
         <div key={group} style={{ borderBottom: "1px solid var(--rule-soft)" }}>
           {/* Group header */}
-          <div
+          <button
+            type="button"
             onClick={() => setOpen(open === group ? "" : group)}
+            aria-expanded={open === group}
             style={{
+              width: "100%",
+              textAlign: "left",
+              border: "none",
+              font: "inherit",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -86,7 +99,7 @@ export default function LayerPanel() {
             >
               <Icon name="chevron" size={14} strokeWidth={2} />
             </div>
-          </div>
+          </button>
 
           {/* Layer items */}
           {open === group && (
@@ -102,7 +115,7 @@ export default function LayerPanel() {
                   }}
                 >
                   <span style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{layer}</span>
-                  <Toggle on={!!layers[layer]} onChange={() => toggle(layer)} />
+                  <Toggle on={!!layers[layer]} onChange={() => toggle(layer)} label={layer} />
                 </div>
               ))}
             </div>
