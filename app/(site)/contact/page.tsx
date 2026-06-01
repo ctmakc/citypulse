@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import SiteHeader from '@/components/site/SiteHeader'
 import SiteFooter from '@/components/site/SiteFooter'
+import { track } from '@/components/analytics/Analytics'
 
 /* ---------- Small reusable styled field wrappers ---------- */
 function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
@@ -116,9 +117,43 @@ export default function ContactPage() {
   const toggleChallenge = (c: string, v: boolean) =>
     setChallenges(prev => ({ ...prev, [c]: v }))
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    // Gather form fields + selected challenges. We show the thank-you state
+    // regardless of network result — lead delivery is best-effort and must
+    // never block the visitor's confirmation.
+    const fd = new FormData(e.currentTarget)
+    const selectedChallenges = Object.entries(challenges)
+      .filter(([, v]) => v)
+      .map(([k]) => k)
+
+    const payload = {
+      type: 'pilot' as const,
+      firstName: fd.get('firstName'),
+      lastName: fd.get('lastName'),
+      email: fd.get('email'),
+      phone: fd.get('phone'),
+      organization: fd.get('organization'),
+      role: fd.get('role'),
+      regionType: fd.get('regionType'),
+      population: fd.get('population'),
+      details: fd.get('details'),
+      challenges: selectedChallenges,
+    }
+
     setSubmitted(true)
+
+    try {
+      await fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      // GA4 conversion (no-ops unless consent granted + gtag loaded).
+      track('generate_lead', { lead_type: 'pilot', form: 'contact_pilot' })
+    } catch {
+      // Already showing the confirmation; nothing else to do.
+    }
   }
 
   /* focus helpers — we handle via inline onFocus/onBlur on each input */

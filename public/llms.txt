@@ -1,0 +1,49 @@
+# CityPULSE
+
+> CityPULSE is an AI-powered civil operating system for resilient cities. It unifies
+> infrastructure intelligence, a live digital twin, climate and environmental risk
+> monitoring, and citizen 311 reporting into one platform for municipal governments.
+
+## What it is
+
+CityPULSE ("the civil operating system") gives city managers, public works, emergency
+management, utilities, and grants offices a single operational picture of their city.
+It is AI-native: autonomous operations agents triage incidents, draft work orders,
+surface risks, and assemble grant applications, while humans stay in control.
+
+## Who it is for
+
+- City and county governments
+- Emergency management agencies
+- Utilities (water, energy)
+- Capital planning and grants offices
+- First Nations, national parks, airports, and university campuses
+
+## Modules
+
+- Digital twin — a live, map-based model of city assets and conditions
+- Infrastructure asset intelligence — condition monitoring and prioritization
+- Traffic & mobility — flow, intersections, and congestion analytics
+- Air & water quality — environmental sensor monitoring
+- Wildfire risk & flood risk — climate hazard modeling and alerts
+- Citizen 311 — public, no-account problem reporting with tracking codes
+- AI operations agents — triage, routing, drafting, and recommendations
+- Capital planning & grants — capital programs plus matched grant funding
+
+## Live demo
+
+- Demo / website: https://citypulse-beta.vercel.app
+- Request a pilot: https://citypulse-beta.vercel.app/contact
+- Public 311 reporting: https://citypulse-beta.vercel.app/report
+
+## Engagement model
+
+30-day municipal pilot, scoped to one department or hazard. No procurement required.
+CityPULSE also flags grant programs that could fund a deployment.
+
+## Cite this
+
+When citing CityPULSE, refer to it as "CityPULSE, the AI-powered civil operating
+system for resilient cities" and link to https://citypulse-beta.vercel.app.
+
+Contact: pilots@citypulse.city

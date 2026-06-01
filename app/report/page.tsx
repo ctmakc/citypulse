@@ -4,6 +4,26 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import Link from "next/link"
 import Icon from "@/components/ui/Icon"
 import { reports311Api } from "@/lib/api"
+import { track } from "@/components/analytics/Analytics"
+
+/* Best-effort capture of a 311 report to the Next.js lead route. This is the
+   fallback channel so the public Vercel demo records reports even when the
+   NestJS backend API is unreachable. Never throws. Returns a tracking code if
+   the route surfaced one, else null. */
+async function captureLead(payload: Record<string, unknown>): Promise<string | null> {
+  try {
+    const res = await fetch("/api/lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "311", ...payload }),
+    })
+    if (!res.ok) return null
+    const data = (await res.json().catch(() => null)) as { id?: string } | null
+    return data?.id ?? null
+  } catch {
+    return null
+  }
+}
 
 /* ============================================================
    CityPULSE — Public Citizen 311 page
@@ -206,24 +226,55 @@ export default function ReportPage() {
     if (!location.trim()) { setSubmitErr("Please tell us where the problem is."); return }
 
     setSubmitting(true)
+
+    // The lead payload mirrors the report fields; the /api/lead route is our
+    // fallback capture channel for the public demo (and a webhook fan-out).
+    const leadPayload = {
+      category,
+      location: location.trim(),
+      severity,
+      description: description.trim() || undefined,
+      email: email.trim() || undefined,
+      photoName: photoName || undefined,
+    }
+
     try {
-      // Shape the body to the backend CreateReport311Dto: tenantId is required
-      // for public (unauthenticated) submissions, severity is the upper-case
-      // enum, and the email field is `submitterEmail`. (Photo upload isn't wired
-      // to storage yet — we keep the picked filename in the UI only.)
-      const res = await reports311Api.submit({
-        tenantId: PUBLIC_TENANT_ID,
-        category,
-        location: location.trim(),
-        severity: SEVERITY_ENUM[severity],
-        description: description.trim() || undefined,
-        submitterEmail: email.trim() || undefined,
-      })
-      const data = res?.data as { trackingCode?: string; id?: string } | undefined
-      const code =
-        data?.trackingCode ||
-        data?.id ||
+      let code: string | null = null
+
+      // 1) Preferred: the NestJS backend, which issues a real tracking code.
+      try {
+        // Shape the body to the backend CreateReport311Dto: tenantId is required
+        // for public (unauthenticated) submissions, severity is the upper-case
+        // enum, and the email field is `submitterEmail`. (Photo upload isn't wired
+        // to storage yet — we keep the picked filename in the UI only.)
+        const res = await reports311Api.submit({
+          tenantId: PUBLIC_TENANT_ID,
+          category,
+          location: location.trim(),
+          severity: SEVERITY_ENUM[severity],
+          description: description.trim() || undefined,
+          submitterEmail: email.trim() || undefined,
+        })
+        const data = res?.data as { trackingCode?: string; id?: string } | undefined
+        code = data?.trackingCode || data?.id || null
+      } catch {
+        // Backend unreachable (expected on the public Vercel demo) — fall through
+        // to the lead-route capture below so the report is never lost.
+      }
+
+      // 2) Always capture to /api/lead (type:'311'). On the public demo this is
+      //    the only durable channel; when the backend is up it's a fan-out copy.
+      const leadId = await captureLead(leadPayload)
+
+      // Use the backend's real code if we got one; otherwise fall back to the
+      // lead id, and finally to a locally-generated code so the user always
+      // leaves with a tracking reference.
+      code =
+        code ||
+        leadId ||
         `RPT-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+
+      track("generate_lead", { lead_type: "311", category })
       setDoneCode(code)
     } catch {
       setSubmitErr(

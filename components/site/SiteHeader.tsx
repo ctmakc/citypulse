@@ -13,6 +13,8 @@ import { usePathname } from 'next/navigation'
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'Platform', href: '/platform' },
   { label: 'Solutions', href: '/solutions' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Resources', href: '/resources' },
   { label: 'Security', href: '/security' },
   { label: 'Sign in', href: '/login' },
 ]

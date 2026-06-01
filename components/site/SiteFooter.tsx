@@ -8,29 +8,31 @@ import Link from 'next/link'
 
 const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] = [
   {
-    heading: 'Platform',
+    heading: 'Product',
     links: [
-      { label: 'Digital twin', href: '/platform' },
-      { label: 'AI agents', href: '/platform' },
-      { label: 'Capital & grants', href: '/platform' },
-      { label: 'Integrations', href: '/platform' },
-    ],
-  },
-  {
-    heading: 'Solutions',
-    links: [
-      { label: 'City managers', href: '/solutions' },
-      { label: 'Emergency management', href: '/solutions' },
-      { label: 'Utilities', href: '/solutions' },
-      { label: 'Grants office', href: '/solutions' },
+      { label: 'Platform', href: '/platform' },
+      { label: 'Solutions', href: '/solutions' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'Security', href: '/security' },
+      { label: 'Resources', href: '/resources' },
     ],
   },
   {
     heading: 'Company',
     links: [
-      { label: 'Security', href: '/security' },
+      { label: 'About', href: '/about' },
+      { label: 'Impact', href: '/impact' },
       { label: 'Request a pilot', href: '/contact' },
       { label: 'Contact', href: '/contact' },
+      { label: 'Report a problem', href: '/report' },
+    ],
+  },
+  {
+    heading: 'Legal',
+    links: [
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
+      { label: 'Accessibility', href: '/accessibility' },
     ],
   },
 ]
